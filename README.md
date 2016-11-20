@@ -38,7 +38,7 @@ Sensor Functions - possibly filter some of these depending on data received duri
 
 
 
-Sensors: Fire them up, get data coming out, see if filtering needs to be done or how to get data back:
+Sensors, Fire them up, get data coming out, see if filtering needs to be done or how to get data back:
 1. Accelerometer
 2. Gyro
 3. Barometer
