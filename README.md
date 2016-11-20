@@ -31,12 +31,12 @@ Functions:
 
 ---
 KalmanFilter
----
+
 
 
 Sensor Functions - possibly filter some of these depending on data received during testing 
 
----
+
 
 Sensors: Fire them up, get data coming out, see if filtering needs to be done or how to get data back:
 1. Accelerometer
