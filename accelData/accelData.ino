@@ -35,7 +35,7 @@ float xScaled, yScaled, zScaled;
 // Initialize analog pin values
 int xVal = 0;
 int yVal = 0;
-int zval = 0;
+int zVal = 0;
 
 
 void setup() {
@@ -65,12 +65,12 @@ void loop() {
     zVal = analogRead(9);
 
     // Scale pins
-    xScaled = (xVal - x_base) / conv;
-    yScaled = (yVal - y_base) / conv;
-    zScaled = (zVal - z_base) / conv;
+    xScaled = (xVal - xBase) / xConv;
+    yScaled = (yVal - yBase) / yConv;
+    zScaled = (zVal - zBase) / zConv;
 
     // scale if mode change
-    if (mode) {
+    if (MODE) {
         xScaled *= GRAVITY;
         yScaled *= GRAVITY;
         zScaled *= GRAVITY;
