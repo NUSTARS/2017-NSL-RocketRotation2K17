@@ -19,13 +19,13 @@ const int zInput = 9;
 
 // min/max values for each axis
 // get from calibration sketch
-const int xMin = 512;
+const int xMin = 244;
 const int xMax = 512;
 
-const int yMin = 512;
+const int yMin = 278;
 const int yMax = 512;
 
-const int zMin = 512;
+const int zMin = 266;
 const int zMax = 512;
 
 // WHOOO VARIABLES!
