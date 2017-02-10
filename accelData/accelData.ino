@@ -13,19 +13,19 @@ const int MODE = 0;
 
 
 // Connect x, y, z to 7, 8, 9, respectively
-const int xInput = 7;
-const int yInput = 8;
-const int zInput = 9;
+const int xInput = 0;
+const int yInput = 1;
+const int zInput = 2;
 
 // min/max values for each axis
 // get from calibration sketch
-const int xMin = 512;
+const int xMin = 498;
 const int xMax = 512;
 
-const int yMin = 512;
+const int yMin = 497;
 const int yMax = 512;
 
-const int zMin = 512;
+const int zMin = 498;
 const int zMax = 512;
 
 // WHOOO VARIABLES!
@@ -79,8 +79,6 @@ void loop() {
     // TODO Write code displaying units depending on mode
 
     // Pprint data
-    Serial.print(xVal);
-    Serial.print(" ");
     Serial.print(xScaled);
     Serial.print(" ");
     Serial.print(yScaled);
