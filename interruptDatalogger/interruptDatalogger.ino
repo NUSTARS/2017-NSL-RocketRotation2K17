@@ -10,11 +10,13 @@
 
 #include <SD.h>
 #include <SPI.h>
+//use SENSORS_GRAVITY_EARTH instead
 #define GRAVITY 9.81
 #include <Wire.h>
 #include "Adafruit_Sensor.h"
 #include "Adafruit_BNO055.h"
 #include "utility/imumaths.h"
+
 
 const int chipSelect = BUILTIN_SDCARD;
 const int MODE = 0;
