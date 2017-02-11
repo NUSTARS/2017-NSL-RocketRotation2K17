@@ -1,24 +1,26 @@
 /**
-* @Author: Yichen Xu
-* @Date:   09-Feb-2017 19:02:46
-* @Email:  ichi@u.northwestern.edu
-* @Last modified by:   Yichen Xu
-* @Last modified time: 09-Feb-2017 19:02:52
-*/
+ * @Author: Yichen Xu
+ * @Date:   09-Feb-2017 19:02:46
+ * @Email:  ichi@u.northwestern.edu
+ * @Last modified by:   Yichen Xu
+ * @Last modified time: 09-Feb-2017 19:02:52
+ */
 
 
 
 #include <SD.h>
 #include <SPI.h>
-//use SENSORS_GRAVITY_EARTH instead
-#define GRAVITY 9.81
 #include <Wire.h>
 #include "Adafruit_Sensor.h"
 #include "Adafruit_BNO055.h"
 #include "utility/imumaths.h"
 
+// ============VARIABLE DECLARATION============================
 
+// Pin select for SD Card. DO NOT MODIFY
 const int chipSelect = BUILTIN_SDCARD;
+
+// I forgot what I made mode do lol
 const int MODE = 0;
 
 // Connect x, y, z to 7, 8, 9, respectively
@@ -46,14 +48,23 @@ int xVal = 0;
 int yVal = 0;
 int zVal = 0;
 
+// Interrupt timer declaration
 IntervalTimer myTimer;
 
+// Counters for keeping track of time
 int counter = 0;
 int delayTime = 1000000;
+
+// bno declaration
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
+// output file varable name declaration
+char outputFile[100];
+String outputString;
 void setup() {
-    delay(5000);
+    delay(1000); // idk just leave this in
+
+// reads input?
     xVal = analogRead(xInput);
     yVal = analogRead(yInput);
     zVal = analogRead(zInput);
@@ -65,24 +76,24 @@ void setup() {
 
 // scale if mode change
     if (MODE) {
-        xScaled *= GRAVITY;
-        yScaled *= GRAVITY;
-        zScaled *= GRAVITY;
+        xScaled *= SENSORS_GRAVITY_EARTH;
+        yScaled *= SENSORS_GRAVITY_EARTH;
+        zScaled *= SENSORS_GRAVITY_EARTH;
     }
 
-    // UNCOMMENT THESE TWO LINES FOR TEENSY AUDIO BOARD:
-    // SPI.setMOSI(7);  // Audio shield has MOSI on pin 7
-    // SPI.setSCK(14);  // Audio shield has SCK on pin 14
 
     // Open serial communications and wait for port to open:
     Serial.begin(9600);
 
-    if(!bno.begin())
-     {
-       /* There was a problem detecting the BNO055 ... check your connections */
-       Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-       while(1);
-     }
+    // initializes BNO and checks if there is a connection
+    if (!bno.begin()) {
+        /* There was a problem detecting the BNO055 ... check your connections */
+        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+        while (1) {
+            ;
+        }
+    }
+
     // Calculation variable we really don't care about
     int xDiff = xMax - xMin;
     int yDiff = yMax - yMin;
@@ -98,9 +109,8 @@ void setup() {
     yConv = ((float) yDiff) / 2;
     zConv = ((float) zDiff) / 2;
 
-
+    // initalize SD CARD
     Serial.print("Initializing SD card...");
-
     // see if the card is present and can be initialized:
     if (!SD.begin(chipSelect)) {
         Serial.println("Card failed, or not present");
@@ -108,14 +118,84 @@ void setup() {
         return;
     }
     Serial.println("card initialized.");
+
+    // Checks and determines appropriate filename
+    outputString = "datalog0.csv";
+    outputString.toCharArray(outputFile, 100);
+    int i = 0;
+    while (SD.exists(outputFile)) {
+      i++;
+      outputString = "datalog";
+      outputString += String(i);
+      outputString += ".csv";
+      Serial.println(outputString);
+      outputString.toCharArray(outputFile, 100);
+    }
+    //dont mind me I'm just making the excel easier to read
+
+    String dataString = "";
+    //get time
+    dataString += "Time";
+    dataString += ",";
+    dataString += "Accel_x";
+    dataString += ",";
+    dataString += "Accel_Y";
+    dataString += ",";
+    dataString += "Accel_Z";
+    dataString += ",";
+    dataString += "Orientation_X";
+    dataString += ",";
+    dataString += "Orientation_Y";
+    dataString += ",";
+    dataString += "Orientation_Z";
+    dataString += ",";
+    dataString += "Angular_Accel_X";
+    dataString += ",";
+    dataString += "Angular_Accel_Y";
+    dataString += ",";
+    dataString += "Angular_Accel_Z";
+    dataString += ",";
+    dataString += "BNO_Accel_X";
+    dataString += ",";
+    dataString += "BNO_Accel_Y";
+    dataString += ",";
+    dataString += "BNO_Accel_Z";
+    dataString += ",";
+    dataString += "Sys Calibration";
+    dataString += ",";
+    dataString += "Gyro Calibration";
+    dataString += ",";
+    dataString += "Accel Calibration";
+    dataString += ",";
+    dataString += "Mag Calibration";
+
+    File dataFile = SD.open(outputFile, FILE_WRITE);
+
+    // if the file is available, write to it:
+    if (dataFile) {
+        dataFile.println(dataString);
+        dataFile.close();
+        // print to the serial port too:
+        Serial.println(dataString);
+    }
+    // if the file isn't open, pop up an error:
+    else {
+        Serial.print("error opening ");
+        Serial.println(outputFile);
+    }
+
+    // initialize interrupt timer MAKE SURE THIS IS LAST OR IDK WHAT HAPPENS
     myTimer.begin(WriteData, delayTime);
 }
 
-
+// ISR that we call every time period to get data
 void WriteData() {
+    // get BNO sensor data
     sensors_event_t event;
+
     bno.getEvent(&event);
 
+    // get analog Sensor Data
     xVal = analogRead(xInput);
     yVal = analogRead(yInput);
     zVal = analogRead(zInput);
@@ -127,28 +207,62 @@ void WriteData() {
 
 // scale if mode change
     if (MODE) {
-        xScaled *= GRAVITY;
-        yScaled *= GRAVITY;
-        zScaled *= GRAVITY;
+        xScaled *= SENSORS_GRAVITY_EARTH;
+        yScaled *= SENSORS_GRAVITY_EARTH;
+        zScaled *= SENSORS_GRAVITY_EARTH;
     }
+
+
+// get raw BNO data
+    imu::Vector<3> gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+    imu::Vector<3> accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+
+    uint8_t system, cgyro, caccel, cmag;
+    system = cgyro = caccel = cmag = 0;
+    bno.getCalibration(&system, &cgyro, &caccel, &cmag);
+
     // make a string for assembling the data to log:
+    //output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
     String dataString = "";
-    dataString += (counter++)*delayTime/1000000;
+    //get time
+    dataString += (counter++) * delayTime / 1000000;
     dataString += ",";
     dataString += xScaled;
     dataString += ",";
     dataString += yScaled;
     dataString += ",";
     dataString += zScaled;
+    dataString += ",";
     dataString += event.orientation.x;
     dataString += ",";
     dataString += event.orientation.y;
     dataString += ",";
     dataString += event.orientation.z;
+    dataString += ",";
+    dataString += gyro.x();
+    dataString += ",";
+    dataString += gyro.y();
+    dataString += ",";
+    dataString += gyro.z();
+    dataString += ",";
+    dataString += accel.x();
+    dataString += ",";
+    dataString += accel.y();
+    dataString += ",";
+    dataString += accel.z();
+    dataString += ",";
+    dataString += system;
+    dataString += ",";
+    dataString += cgyro;
+    dataString += ",";
+    dataString += caccel;
+    dataString += ",";
+    dataString += cmag;
 
     // open the file. note that only one file can be open at a time,
     // so you have to close this one before opening another.
-    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+    File dataFile = SD.open(outputFile, FILE_WRITE);
 
     // if the file is available, write to it:
     if (dataFile) {
@@ -159,7 +273,8 @@ void WriteData() {
     }
     // if the file isn't open, pop up an error:
     else {
-        Serial.println("error opening datalog.txt");
+        Serial.print("error opening ");
+        Serial.println(outputFile);
     }
 }
 
