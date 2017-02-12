@@ -33,6 +33,8 @@ typedef struct {
 void initializeAccel();
 void initializeBNO();
 void initializeSD();
+void newFile();
+void writeData(DataSet * d);
 sensors_vec_t getAccelData();
 sensors_vec_t getOrientationData();
 CalibrationData getCalibrationStatus();
@@ -41,7 +43,7 @@ DataSet getData();
 
 
 // ============VARIABLE DECLARATION============================
-
+// Pin select for on toggle switch
 // Pin select for SD Card. DO NOT MODIFY
 const int chipSelect = BUILTIN_SDCARD;
 
@@ -87,9 +89,11 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 char outputFile[100];
 String outputString;
 
+bool running = false;
+
 void setup() {
     delay(1000); // idk just leave this in
-
+    pinMode(30, INPUT);
     // slow output console if debugging
     if (DEBUG) {
         delayTime = 1000000;
@@ -105,76 +109,120 @@ void setup() {
     initializeSD();
 
     // initialize interrupt timer MAKE SURE THIS IS LAST OR IDK WHAT HAPPENS
-    myTimer.begin(WriteData, delayTime);
+    while (!digitalRead(30)) {
+        ;
+    }
+
+    Serial.println("Starting Data Acquisition");
+    running = true;
+    while (digitalRead(30)) {
+        ;
+    }
+    myTimer.begin(dataTick, delayTime);
 }
 
-// ISR that we call every time period to get data
-void WriteData() {
+// ISR that we call every time period to get d
+void dataTick() {
 
     DataSet data = getData();
 
-    // make a string for assembling the data to log:
-    // output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
-    String dataString = "";
-    // get time
-    dataString += data.time;
-    dataString += ",";
-    dataString += data.accel.x;
-    dataString += ",";
-    dataString += data.accel.y;
-    dataString += ",";
-    dataString += data.accel.z;
-    dataString += ",";
-    dataString += data.orientation.x;
-    dataString += ",";
-    dataString += data.orientation.y;
-    dataString += ",";
-    dataString += data.orientation.z;
-    dataString += ",";
-    dataString += data.gyro.x(); //lol dont ask me why there nees to be () here
-    dataString += ",";
-    dataString += data.gyro.y();
-    dataString += ",";
-    dataString += data.gyro.z();
-    dataString += ",";
-    dataString += data.bAccel.x();
-    dataString += ",";
-    dataString += data.bAccel.y();
-    dataString += ",";
-    dataString += data.bAccel.z();
-    dataString += ",";
-    dataString += data.c.sysCal;
-    dataString += ",";
-    dataString += data.c.gyroCal;
-    dataString += ",";
-    dataString += data.c.bAccelCal;
-    dataString += ",";
-    dataString += data.c.magCal;
+    writeData(&data);
 
-    // open the file. note that only one file can be open at a time,
-    // so you have to close this one before opening another.
-    File dataFile = SD.open(outputFile, FILE_WRITE);
+    if (digitalRead(30)) {
+        delay(50);
+        if (digitalRead(30)) {
+            running = false;
+            Serial.println("Stopping Data Aquisition");
+            myTimer.end();
+            while (digitalRead(30)) {
+                ;
+            }
 
-    // if the file is available, write to it:
-    if (dataFile) {
-        dataFile.println(dataString);
-        dataFile.close();
-        // print to the serial port too:
-        Serial.println(dataString);
+            while (!running) {
+                if (digitalRead(30)) {
+                    delay(50);
+                    if (digitalRead(30)) {
+                        running = true;
+                        while (digitalRead(30)) {
+                            ;
+                        }
+                    }
+                }
+            }
+            newFile();
+            Serial.println("Starting Data Aquisition");
+            myTimer.begin(dataTick, delayTime);
+        }
     }
-    // if the file isn't open, pop up an error:
-    else {
-        Serial.print("error opening ");
-        Serial.println(outputFile);
-    }
+
+
 }
 
 void loop() {
     ;
 }
 
+void writeData(DataSet * d) {
+// make a string for assembling the d to log:
+// output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
+    String dataString = "";
+
+// get time
+    dataString += d->time;
+    dataString += ",";
+    dataString += d->accel.x;
+    dataString += ",";
+    dataString += d->accel.y;
+    dataString += ",";
+    dataString += d->accel.z;
+    dataString += ",";
+    dataString += d->orientation.x;
+    dataString += ",";
+    dataString += d->orientation.y;
+    dataString += ",";
+    dataString += d->orientation.z;
+    dataString += ",";
+    dataString += d->gyro.x(); // lol dont ask me why there nees to be () here
+    dataString += ",";
+    dataString += d->gyro.y();
+    dataString += ",";
+    dataString += d->gyro.z();
+    dataString += ",";
+    dataString += d->bAccel.x();
+    dataString += ",";
+    dataString += d->bAccel.y();
+    dataString += ",";
+    dataString += d->bAccel.z();
+    dataString += ",";
+    dataString += d->c.sysCal;
+    dataString += ",";
+    dataString += d->c.gyroCal;
+    dataString += ",";
+    dataString += d->c.bAccelCal;
+    dataString += ",";
+    dataString += d->c.magCal;
+
+// open the file. note that only one file can be open at a time,
+// so you have to close this one before opening another.
+    File dataFile = SD.open(outputFile, FILE_WRITE);
+
+// if the file is available, write to it:
+    if (dataFile) {
+        dataFile.println(dataString);
+        dataFile.close();
+        // print to the serial port too:
+        Serial.println(dataString);
+    }
+// if the file isn't open, pop up an error:
+    else {
+        Serial.print("error opening ");
+        Serial.println(outputFile);
+    }
+}
+
 DataSet getData() {
     DataSet tempData;
+
     tempData.time = (counter++) * ((float) delayTime) / 1000000;
     tempData.accel = getAccelData();
     tempData.orientation = getOrientationData();
@@ -185,19 +233,21 @@ DataSet getData() {
     return tempData;
 }
 
-CalibrationData getCalibrationStatus () {
+CalibrationData getCalibrationStatus() {
     CalibrationData sensCal;
+
     bno.getCalibration(&(sensCal.sysCal), &(sensCal.gyroCal), &(sensCal.bAccelCal), &(sensCal.magCal));
     return sensCal;
 }
 sensors_vec_t getOrientationData() {
-        sensors_event_t event;
-        bno.getEvent(&event);
-        return event.orientation;
+    sensors_event_t event;
+
+    bno.getEvent(&event);
+    return event.orientation;
 }
 
-sensors_vec_t getAccelData () {
-    // get analog Sensor Data
+sensors_vec_t getAccelData() {
+    // get analog Sensor d
     xVal = analogRead(xInput);
     yVal = analogRead(yInput);
     zVal = analogRead(zInput);
@@ -233,18 +283,7 @@ void initializeBNO() {
 
 }
 
-void initializeSD() {
-    // initalize SD CARD
-    Serial.print("Initializing SD card...");
-    // see if the card is present and can be initialized:
-    if (!SD.begin(chipSelect)) {
-        Serial.println("Card failed, or not present");
-        // don't do anything more:
-        return;
-    }
-    Serial.println("card initialized.");
-
-    // Checks and determines appropriate filename
+void newFile() {
     outputString = "datalog0.csv";
     outputString.toCharArray(outputFile, 100);
     int i = 0;
@@ -253,9 +292,10 @@ void initializeSD() {
         outputString = "datalog";
         outputString += String(i);
         outputString += ".csv";
-        Serial.println(outputString);
         outputString.toCharArray(outputFile, 100);
     }
+    Serial.print("Filename: ");
+    Serial.println(outputString);
     // dont mind me I'm just making the excel easier to read
 
     String dataString = "Time,Accel_X,Accel_Y,Accel_Z,Orientation_X,Orientation_Y,Orientation_Z,Angular_Accel_X,Angular_Accel_Y,Angular_Accel_Z,BNO_Accel_X,BNO_Accel_Y,BNO_Accel_Z,Sys Calibration,Gyro Calibration,Accel Calibration,Mag Calibration";
@@ -274,6 +314,19 @@ void initializeSD() {
         Serial.print("error opening ");
         Serial.println(outputFile);
     }
+}
+void initializeSD() {
+    // initalize SD CARD
+    Serial.print("Initializing SD card...");
+    // see if the card is present and can be initialized:
+    if (!SD.begin(chipSelect)) {
+        Serial.println("Card failed, or not present");
+        // don't do anything more:
+        return;
+    }
+    Serial.println("card initialized.");
+
+    newFile();
 }
 
 void initializeAccel() {
