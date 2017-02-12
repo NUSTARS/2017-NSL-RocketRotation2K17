@@ -15,6 +15,17 @@
 #include "Adafruit_BNO055.h"
 #include "utility/imumaths.h"
 
+//if debugging, set to 1, otherwise set to 0
+#define DEBUG 1
+
+//================= FUNCTION DECLARATIONS =================
+
+void initializeAccel();
+void initializeBNO();
+void initializeSD();
+
+
+
 // ============VARIABLE DECLARATION============================
 
 // Pin select for SD Card. DO NOT MODIFY
@@ -61,128 +72,20 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 // output file varable name declaration
 char outputFile[100];
 String outputString;
+
 void setup() {
     delay(1000); // idk just leave this in
-
-// reads input?
-    xVal = analogRead(xInput);
-    yVal = analogRead(yInput);
-    zVal = analogRead(zInput);
-
-// Scale pins
-    xScaled = (xVal - xBase) / xConv;
-    yScaled = (yVal - yBase) / yConv;
-    zScaled = (zVal - zBase) / zConv;
-
-// scale if mode change
-    if (MODE) {
-        xScaled *= SENSORS_GRAVITY_EARTH;
-        yScaled *= SENSORS_GRAVITY_EARTH;
-        zScaled *= SENSORS_GRAVITY_EARTH;
-    }
-
+    if (DEBUG) delayTime = 1000000;
 
     // Open serial communications and wait for port to open:
     Serial.begin(9600);
 
-    // initializes BNO and checks if there is a connection
-    if (!bno.begin()) {
-        /* There was a problem detecting the BNO055 ... check your connections */
-        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-        while (1) {
-            ;
-        }
-    }
+    initializeBNO();
 
-    // Calculation variable we really don't care about
-    int xDiff = xMax - xMin;
-    int yDiff = yMax - yMin;
-    int zDiff = yMax - yMin;
 
-    // Calculating the value of zero
-    xBase = ((float) xMin + xMax) / 2;
-    yBase = ((float) yMin + yMax) / 2;
-    zBase = ((float) zMin + zMax) / 2;
+    initializeAccel();
 
-    // Calculating the conversion factor for 1g
-    xConv = ((float) xDiff) / 2;
-    yConv = ((float) yDiff) / 2;
-    zConv = ((float) zDiff) / 2;
-
-    // initalize SD CARD
-    Serial.print("Initializing SD card...");
-    // see if the card is present and can be initialized:
-    if (!SD.begin(chipSelect)) {
-        Serial.println("Card failed, or not present");
-        // don't do anything more:
-        return;
-    }
-    Serial.println("card initialized.");
-
-    // Checks and determines appropriate filename
-    outputString = "datalog0.csv";
-    outputString.toCharArray(outputFile, 100);
-    int i = 0;
-    while (SD.exists(outputFile)) {
-      i++;
-      outputString = "datalog";
-      outputString += String(i);
-      outputString += ".csv";
-      Serial.println(outputString);
-      outputString.toCharArray(outputFile, 100);
-    }
-    //dont mind me I'm just making the excel easier to read
-
-    String dataString = "";
-    //get time
-    dataString += "Time";
-    dataString += ",";
-    dataString += "Accel_x";
-    dataString += ",";
-    dataString += "Accel_Y";
-    dataString += ",";
-    dataString += "Accel_Z";
-    dataString += ",";
-    dataString += "Orientation_X";
-    dataString += ",";
-    dataString += "Orientation_Y";
-    dataString += ",";
-    dataString += "Orientation_Z";
-    dataString += ",";
-    dataString += "Angular_Accel_X";
-    dataString += ",";
-    dataString += "Angular_Accel_Y";
-    dataString += ",";
-    dataString += "Angular_Accel_Z";
-    dataString += ",";
-    dataString += "BNO_Accel_X";
-    dataString += ",";
-    dataString += "BNO_Accel_Y";
-    dataString += ",";
-    dataString += "BNO_Accel_Z";
-    dataString += ",";
-    dataString += "Sys Calibration";
-    dataString += ",";
-    dataString += "Gyro Calibration";
-    dataString += ",";
-    dataString += "Accel Calibration";
-    dataString += ",";
-    dataString += "Mag Calibration";
-
-    File dataFile = SD.open(outputFile, FILE_WRITE);
-
-    // if the file is available, write to it:
-    if (dataFile) {
-        dataFile.println(dataString);
-        dataFile.close();
-        // print to the serial port too:
-        Serial.println(dataString);
-    }
-    // if the file isn't open, pop up an error:
-    else {
-        Serial.print("error opening ");
-        Serial.println(outputFile);
-    }
+    initializeSD();
 
     // initialize interrupt timer MAKE SURE THIS IS LAST OR IDK WHAT HAPPENS
     myTimer.begin(WriteData, delayTime);
@@ -280,4 +183,93 @@ void WriteData() {
 
 void loop() {
     ;
+}
+
+void initializeBNO() {
+    // initializes BNO and checks if there is a connection
+    if (!bno.begin()) {
+        /* There was a problem detecting the BNO055 ... check your connections */
+        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+        while (1) {
+            ;
+        }
+    }
+
+}
+
+void initializeSD() {
+    // initalize SD CARD
+    Serial.print("Initializing SD card...");
+    // see if the card is present and can be initialized:
+    if (!SD.begin(chipSelect)) {
+        Serial.println("Card failed, or not present");
+        // don't do anything more:
+        return;
+    }
+    Serial.println("card initialized.");
+
+    // Checks and determines appropriate filename
+    outputString = "datalog0.csv";
+    outputString.toCharArray(outputFile, 100);
+    int i = 0;
+    while (SD.exists(outputFile)) {
+      i++;
+      outputString = "datalog";
+      outputString += String(i);
+      outputString += ".csv";
+      Serial.println(outputString);
+      outputString.toCharArray(outputFile, 100);
+    }
+    //dont mind me I'm just making the excel easier to read
+
+    String dataString = "Time,Accel_X,Accel_Y,Accel_Z,Orientation_X,Orientation_Y,Orientation_Z,Angular_Accel_X,Angular_Accel_Y,Angular_Accel_Z,BNO_Accel_X,BNO_Accel_Y,BNO_Accel_Z,Sys Calibration,Gyro Calibration,Accel Calibration,Mag Calibration";
+
+    File dataFile = SD.open(outputFile, FILE_WRITE);
+
+    // if the file is available, write to it:
+    if (dataFile) {
+        dataFile.println(dataString);
+        dataFile.close();
+        // print to the serial port too:
+        Serial.println(dataString);
+    }
+    // if the file isn't open, pop up an error:
+    else {
+        Serial.print("error opening ");
+        Serial.println(outputFile);
+    }
+}
+
+void initializeAccel() {
+    // reads input?
+        xVal = analogRead(xInput);
+        yVal = analogRead(yInput);
+        zVal = analogRead(zInput);
+
+    // Scale pins
+        xScaled = (xVal - xBase) / xConv;
+        yScaled = (yVal - yBase) / yConv;
+        zScaled = (zVal - zBase) / zConv;
+
+    // scale if mode change
+        if (MODE) {
+            xScaled *= SENSORS_GRAVITY_EARTH;
+            yScaled *= SENSORS_GRAVITY_EARTH;
+            zScaled *= SENSORS_GRAVITY_EARTH;
+        }
+
+    // Calculation variable we really don't care about
+    int xDiff = xMax - xMin;
+    int yDiff = yMax - yMin;
+    int zDiff = yMax - yMin;
+
+    // Calculating the value of zero
+    xBase = ((float) xMin + xMax) / 2;
+    yBase = ((float) yMin + yMax) / 2;
+    zBase = ((float) zMin + zMax) / 2;
+
+    // Calculating the conversion factor for 1g
+    xConv = ((float) xDiff) / 2;
+    yConv = ((float) yDiff) / 2;
+    zConv = ((float) zDiff) / 2;
 }
