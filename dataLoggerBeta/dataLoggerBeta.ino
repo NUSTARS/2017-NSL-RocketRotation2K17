@@ -15,16 +15,25 @@
 #include "Adafruit_BNO055.h"
 #include "utility/imumaths.h"
 
-//if debugging, set to 1, otherwise set to 0
+// if debugging, set to 1, otherwise set to 0
 #define DEBUG 1
 
-//================= FUNCTION DECLARATIONS =================
+// ================= FUNCTION DECLARATIONS =================
 
 void initializeAccel();
 void initializeBNO();
 void initializeSD();
 
+typedef struct {
+    uint8_t sysCal, gyroCal, bAccelCal, magCal;
+} CalibrationData;
 
+typedef struct {
+    float time;
+    sensors_vec_t accel, orientation;
+    imu::Vector<3> gyro, bAccel, euler;
+    CalibrationData c;
+} DataSet;
 
 // ============VARIABLE DECLARATION============================
 
@@ -75,13 +84,16 @@ String outputString;
 
 void setup() {
     delay(1000); // idk just leave this in
-    if (DEBUG) delayTime = 1000000;
+
+    // slow output console if debugging
+    if (DEBUG) {
+        delayTime = 1000000;
+    }
 
     // Open serial communications and wait for port to open:
     Serial.begin(9600);
 
     initializeBNO();
-
 
     initializeAccel();
 
@@ -115,53 +127,57 @@ void WriteData() {
         zScaled *= SENSORS_GRAVITY_EARTH;
     }
 
+    sensors_vec_t accelPoint;
+    accelPoint.x = xScaled;
+    accelPoint.y = yScaled;
+    accelPoint.z = zScaled;
 
 // get raw BNO data
     imu::Vector<3> gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
     imu::Vector<3> accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
     imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
 
-    uint8_t system, cgyro, caccel, cmag;
-    system = cgyro = caccel = cmag = 0;
-    bno.getCalibration(&system, &cgyro, &caccel, &cmag);
-
+    CalibrationData sensCal;
+    bno.getCalibration(&(sensCal.sysCal), &(sensCal.gyroCal), &(sensCal.bAccelCal), &(sensCal.magCal));
+    float dataTime = (counter++) * ((float) delayTime) / 1000000;
+    DataSet data = { dataTime, accelPoint, event.orientation, gyro, accel, euler, sensCal };
     // make a string for assembling the data to log:
-    //output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
+    // output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
     String dataString = "";
-    //get time
-    dataString += (counter++) * ((float)delayTime) / 1000000;
+    // get time
+    dataString += data.time;
     dataString += ",";
-    dataString += xScaled;
+    dataString += data.accel.x;
     dataString += ",";
-    dataString += yScaled;
+    dataString += data.accel.y;
     dataString += ",";
-    dataString += zScaled;
+    dataString += data.accel.z;
     dataString += ",";
-    dataString += event.orientation.x;
+    dataString += data.orientation.x;
     dataString += ",";
-    dataString += event.orientation.y;
+    dataString += data.orientation.y;
     dataString += ",";
-    dataString += event.orientation.z;
+    dataString += data.orientation.z;
     dataString += ",";
-    dataString += gyro.x();
+    dataString += data.gyro.x(); //lol dont ask me why there nees to be () here
     dataString += ",";
-    dataString += gyro.y();
+    dataString += data.gyro.y();
     dataString += ",";
-    dataString += gyro.z();
+    dataString += data.gyro.z();
     dataString += ",";
-    dataString += accel.x();
+    dataString += data.bAccel.x();
     dataString += ",";
-    dataString += accel.y();
+    dataString += data.bAccel.y();
     dataString += ",";
-    dataString += accel.z();
+    dataString += data.bAccel.z();
     dataString += ",";
-    dataString += system;
+    dataString += data.c.sysCal;
     dataString += ",";
-    dataString += cgyro;
+    dataString += data.c.gyroCal;
     dataString += ",";
-    dataString += caccel;
+    dataString += data.c.bAccelCal;
     dataString += ",";
-    dataString += cmag;
+    dataString += data.c.magCal;
 
     // open the file. note that only one file can be open at a time,
     // so you have to close this one before opening another.
@@ -213,14 +229,14 @@ void initializeSD() {
     outputString.toCharArray(outputFile, 100);
     int i = 0;
     while (SD.exists(outputFile)) {
-      i++;
-      outputString = "datalog";
-      outputString += String(i);
-      outputString += ".csv";
-      Serial.println(outputString);
-      outputString.toCharArray(outputFile, 100);
+        i++;
+        outputString = "datalog";
+        outputString += String(i);
+        outputString += ".csv";
+        Serial.println(outputString);
+        outputString.toCharArray(outputFile, 100);
     }
-    //dont mind me I'm just making the excel easier to read
+    // dont mind me I'm just making the excel easier to read
 
     String dataString = "Time,Accel_X,Accel_Y,Accel_Z,Orientation_X,Orientation_Y,Orientation_Z,Angular_Accel_X,Angular_Accel_Y,Angular_Accel_Z,BNO_Accel_X,BNO_Accel_Y,BNO_Accel_Z,Sys Calibration,Gyro Calibration,Accel Calibration,Mag Calibration";
 
@@ -242,21 +258,21 @@ void initializeSD() {
 
 void initializeAccel() {
     // reads input?
-        xVal = analogRead(xInput);
-        yVal = analogRead(yInput);
-        zVal = analogRead(zInput);
+    xVal = analogRead(xInput);
+    yVal = analogRead(yInput);
+    zVal = analogRead(zInput);
 
     // Scale pins
-        xScaled = (xVal - xBase) / xConv;
-        yScaled = (yVal - yBase) / yConv;
-        zScaled = (zVal - zBase) / zConv;
+    xScaled = (xVal - xBase) / xConv;
+    yScaled = (yVal - yBase) / yConv;
+    zScaled = (zVal - zBase) / zConv;
 
     // scale if mode change
-        if (MODE) {
-            xScaled *= SENSORS_GRAVITY_EARTH;
-            yScaled *= SENSORS_GRAVITY_EARTH;
-            zScaled *= SENSORS_GRAVITY_EARTH;
-        }
+    if (MODE) {
+        xScaled *= SENSORS_GRAVITY_EARTH;
+        yScaled *= SENSORS_GRAVITY_EARTH;
+        zScaled *= SENSORS_GRAVITY_EARTH;
+    }
 
     // Calculation variable we really don't care about
     int xDiff = xMax - xMin;
