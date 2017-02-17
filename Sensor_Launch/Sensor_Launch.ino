@@ -211,11 +211,48 @@ uint32_t timer = millis();
 void loop(void) 
 {
 Serial.print("\n Accelerometer Data: \n")
-read_accelerometer();
+accelerometer_read();
 delay(1000);
 
+bno_read();
 
 
+gps_read();
+
+
+}
+
+
+void accelerometer_read(void){
+/////////Accelerometer loop//////////////////
+// Read pins
+xVal = analogRead(7);
+yVal = analogRead(8);
+zVal = analogRead(9);
+// Scale pins
+xScaled = (xVal - xBase) / xConv;
+yScaled = (yVal - yBase) / yConv;
+zScaled = (zVal - zBase) / zConv;
+// scale if mode change
+if (MODE) {
+    xScaled *= GRAVITY;
+    yScaled *= GRAVITY;
+    zScaled *= GRAVITY;
+}
+// TODO Write code displaying units depending on mode
+// Pprint data
+Serial.print(xVal);
+Serial.print(" ");
+Serial.print(xScaled);
+Serial.print(" ");
+Serial.print(yScaled);
+Serial.print(" ");
+Serial.println(zScaled);
+delay(100);
+////// end accelerometer loop /////////////////
+}
+
+void bno_read(void){
 ////////////// BNO 055 loop //////////////////////////
 /* Get a new sensor event */ 
 sensors_event_t event; 
@@ -232,8 +269,9 @@ Serial.println("");
 
 delay(100);
 //////////////// End BNO 055 loop ///////////////////////////
+}
 
-
+void gps_read(void){
 ////////////// GPS loop ////////////////////////
    
 // in case you are not using the interrupt above, you'll
@@ -288,53 +326,4 @@ if (GPS.fix) {
 }
 delay(100)
 /////////////end GPS loop////////////////
-}
-
-
-void read_accelerometer(void){
-/////////Accelerometer loop//////////////////
-// Read pins
-xVal = analogRead(7);
-yVal = analogRead(8);
-zVal = analogRead(9);
-// Scale pins
-xScaled = (xVal - xBase) / xConv;
-yScaled = (yVal - yBase) / yConv;
-zScaled = (zVal - zBase) / zConv;
-// scale if mode change
-if (MODE) {
-    xScaled *= GRAVITY;
-    yScaled *= GRAVITY;
-    zScaled *= GRAVITY;
-}
-// TODO Write code displaying units depending on mode
-// Pprint data
-Serial.print(xVal);
-Serial.print(" ");
-Serial.print(xScaled);
-Serial.print(" ");
-Serial.print(yScaled);
-Serial.print(" ");
-Serial.println(zScaled);
-delay(100);
-////// end accelerometer loop /////////////////
-}
-
-void bno_read(void){
-////////////// BNO 055 loop //////////////////////////
-/* Get a new sensor event */ 
-sensors_event_t event; 
-bno.getEvent(&event);
-
-/* Display the floating point data */
-Serial.print("X: ");
-Serial.print(event.orientation.x, 4);
-Serial.print("\tY: ");
-Serial.print(event.orientation.y, 4);
-Serial.print("\tZ: ");
-Serial.print(event.orientation.z, 4);
-Serial.println("");
-
-delay(100);
-//////////////// End BNO 055 loop ///////////////////////////
 }

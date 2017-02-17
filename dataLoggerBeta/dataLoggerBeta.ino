@@ -18,6 +18,7 @@
 // if debugging, set to 1, otherwise set to 0
 #define DEBUG 1
 
+
 // ================= FUNCTION DECLARATIONS =================
 typedef struct {
     uint8_t sysCal, gyroCal, bAccelCal, magCal;
@@ -122,12 +123,53 @@ void setup() {
 }
 
 // ISR that we call every time period to get d
+long postLaunchCount = 0;
+bool isLaunched = false;
+uint8_t accel_vector = 0;
 void dataTick() {
 
     DataSet data = getData();
 
     writeData(&data);
 
+    if isLaunched = false{
+        accel_vector = sqrt((data.bAccel.x())^2 + (data.bAccel.y())^2 + (data.bAccel.z())^2);
+    }
+    if (accel_vector> 3){
+        isLaunched = true;
+    }
+    if isLaunched{
+        postLaunchCount++;
+
+        if (postLaunchCount <= 175) { //when
+            analogWrite(38, 255);  //turn on motor (and for this test, change direction to 1 and torque to 255)
+            //analogWrite(39, 255);  //set direction
+            //analogWrite(40, 255);  //set max torque limit
+            analogWrite(41, 0);   //set speed 0
+
+        }
+        else if (175 < postLaunchCount < 325)
+        {
+            //digitalWrite(38, HIGH);  //turn on motor 
+            //digitalWrite(39, LOW);  //set direction
+            //analogWrite(40, 255);  //set max torque limit
+            analogWrite(41, 128); //set speed half
+        }
+        else if (325 <= postLaunchCount < 475)
+        {
+            //digitalWrite(38, HIGH);  //turn on motor 
+            //digitalWrite(39, LOW);  //set direction
+            //analogWrite(40, 255);  //set max torque limit
+            analogWrite(41, 255); //set speed full
+        }
+        else{
+            analogWrite(38, 0);   //turn off motor 
+            //digitalWrite(39, LOW);  //set direction
+            //analogWrite(40, 0);    //set max torque limit
+            analogWrite(41, 0);   //set speed full   
+            isLaunched = false;  //stop checking time        
+        }
+    }
     if (digitalRead(30)) {
         delay(50);
         if (digitalRead(30)) {
