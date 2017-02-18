@@ -13,9 +13,9 @@ const int MODE = 0;
 
 
 // Connect x, y, z to 7, 8, 9, respectively
-const int xInput = 0;
-const int yInput = 1;
-const int zInput = 2;
+const int xInput = 1;
+const int yInput = 2;
+const int zInput = 3;
 
 // min/max values for each axis
 // get from calibration sketch
