@@ -125,20 +125,20 @@ void setup() {
 // ISR that we call every time period to get d
 long postLaunchCount = 0;
 bool isLaunched = false;
-uint8_t accel_vector = 0;
+double accel_vector = 0;
 void dataTick() {
 
     DataSet data = getData();
 
     writeData(&data);
 
-    if isLaunched = false{
-        accel_vector = sqrt((data.bAccel.x())^2 + (data.bAccel.y())^2 + (data.bAccel.z())^2);
+    if (isLaunched == false){
+        accel_vector = sqrt(pow((data.bAccel.x()),2) + pow((data.bAccel.y()),2) + pow((data.bAccel.z()),2));
     }
     if (accel_vector> 3){
         isLaunched = true;
     }
-    if isLaunched{
+    if (isLaunched){
         postLaunchCount++;
 
         if (postLaunchCount <= 175) { //when
