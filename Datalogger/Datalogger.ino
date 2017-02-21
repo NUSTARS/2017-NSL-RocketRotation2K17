@@ -1,64 +1,62 @@
-/*
-   SD card datalogger
-
-   This example shows how to log data from three analog sensors
-   to an SD card using the SD library.
-
-   The circuit:
- * analog sensors on analog ins 0, 1, and 2
- * SD card attached to SPI bus as follows:
- ** MOSI - pin 11, pin 7 on Teensy with audio board
- ** MISO - pin 12
- ** CLK - pin 13, pin 14 on Teensy with audio board
- ** CS - pin 4,  pin 10 on Teensy with audio board
-
-   created  24 Nov 2010
-   modified 9 Apr 2012
-   by Tom Igoe
-
-   This example code is in the public domain.
-
+/**
+ * @Author: Yichen Xu
+ * @Date:   09-Feb-2017 19:02:46
+ * @Email:  ichi@u.northwestern.edu
+ * @Last modified by:   Yichen Xu
+ * @Last modified time: 09-Feb-2017 19:02:52
  */
 
-#include <SD.h>
-#include <SPI.h>
-#define GRAVITY 9.81
+#include "init.h"
+#include "dataCollection.h"
+#include "dataWriter.h"
 
-// On the Ethernet Shield, CS is pin 4. Note that even if it's not
-// used as the CS pin, the hardware CS pin (10 on most Arduino boards,
-// 53 on the Mega) must be left as an output or the SD library
-// functions will not work.
 
-// change this to match your SD shield or module;
-// Arduino Ethernet shield: pin 4
-// Adafruit SD shields and modules: pin 10
-// Sparkfun SD shield: pin 8
-// Teensy audio board: pin 10
-// Teensy 3.5 & 3.6 on-board: BUILTIN_SDCARD
-// Wiz820+SD board: pin 4
-// Teensy 2.0: pin 0
-// Teensy++ 2.0: pin 20
-const int chipSelect = BUILTIN_SDCARD;
-const int MODE = 0;
+// if debugging, set to 1, otherwise set to 0
+#define DEBUG 1
 
+
+// ================= FUNCTION DECLARATIONS =================
+
+// PIN DELCARATIONS
+int chipSelect = BUILTIN_SDCARD;
+
+int xInput = 1;
+int yInput = 2;
+int zInput = 3;
+
+int buttonPin = 34;
+int speedPin = 35;
+int motorPin = 36;
+int collectPin = 37;
+int calibrationPin = 38;
+int pulsePin = 39;
+int builtInLED = 40;
+
+// ============VARIABLE DECLARATION============================
+
+int prevPos;
+int prevEI;
+int turnLeft = 720;
+
+// I forgot what I made mode do lol
+int MODE = 0;
 
 // Connect x, y, z to 7, 8, 9, respectively
-const int xInput = 0;
-const int yInput = 1;
-const int zInput = 2;
+
 
 // min/max values for each axis
 // get from calibration sketch
-const int xMin = 498;
-const int xMax = 512;
+int xMin = 498;
+int xMax = 512;
 
-const int yMin = 497;
-const int yMax = 512;
+int yMin = 497;
+int yMax = 512;
 
-const int zMin = 498;
-const int zMax = 512;
+int zMin = 498;
+int zMax = 512;
 
 // WHOOO VARIABLES!
+
 float xBase, yBase, zBase, xConv, yConv, zConv;
 float xScaled, yScaled, zScaled;
 
@@ -67,99 +65,108 @@ int xVal = 0;
 int yVal = 0;
 int zVal = 0;
 
+// Interrupt timer declaration
+IntervalTimer myTimer;
+
+// Counters for keeping track of time
+int counter = 0;
+int delayTime = 20000;
+
+// bno declaration
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
+// output file varable name declaration
+char outputFile[100];
+String outputString;
+
+bool running = false;
+
 void setup() {
+    delay(1000); // idk just leave this in
+    pinMode(buttonPin, INPUT);
+    pinMode(pulsePin, INPUT);
+    pinMode(builtInLED, OUTPUT);
+    pinMode(calibrationPin, OUTPUT);
+    pinMode(motorPin, OUTPUT);
+    pinMode(collectPin, OUTPUT);
 
-    xVal = analogRead(xInput);
-    yVal = analogRead(yInput);
-    zVal = analogRead(zInput);
-
-// Scale pins
-    xScaled = (xVal - xBase) / xConv;
-    yScaled = (yVal - yBase) / yConv;
-    zScaled = (zVal - zBase) / zConv;
-
-// scale if mode change
-    if (MODE) {
-        xScaled *= GRAVITY;
-        yScaled *= GRAVITY;
-        zScaled *= GRAVITY;
+    // slow output console if debugging
+    if (DEBUG) {
+        delayTime = 1000000;
     }
-
-    // UNCOMMENT THESE TWO LINES FOR TEENSY AUDIO BOARD:
-    // SPI.setMOSI(7);  // Audio shield has MOSI on pin 7
-    // SPI.setSCK(14);  // Audio shield has SCK on pin 14
 
     // Open serial communications and wait for port to open:
     Serial.begin(9600);
-    while (!Serial) {
-        ; // wait for serial port to connect. Needed for Leonardo only
-    }
 
-    // Calculation variable we really don't care about
-    int xDiff = xMax - xMin;
-    int yDiff = yMax - yMin;
-    int zDiff = yMax - yMin;
+    initializeBNO();
 
-    // Calculating the value of zero
-    xBase = ((float) xMin + xMax) / 2;
-    yBase = ((float) yMin + yMax) / 2;
-    zBase = ((float) zMin + zMax) / 2;
+    initializeAccel();
 
-    // Calculating the conversion factor for 1g
-    xConv = ((float) xDiff) / 2;
-    yConv = ((float) yDiff) / 2;
-    zConv = ((float) zDiff) / 2;
+    initializeSD();
 
-
-    Serial.print("Initializing SD card...");
-
-    // see if the card is present and can be initialized:
-    if (!SD.begin(chipSelect)) {
-        Serial.println("Card failed, or not present");
-        // don't do anything more:
-        return;
-    }
-    Serial.println("card initialized.");
+    attatchInterrupt(buttonPin, pause, rising);
 }
 
+// ISR that we call every time period to get d
+long postLaunchCount = 0;
+bool isLaunched = false;
+double accel_vector = 0;
+
+void pause() {
+    running != running;
+    if (running) {
+        newFile();
+    }
+}
+
+uint32_t timePrev;
 void loop() {
-    xVal = analogRead(xInput);
-    yVal = analogRead(yInput);
-    zVal = analogRead(zInput);
-
-// Scale pins
-    xScaled = (xVal - xBase) / xConv;
-    yScaled = (yVal - yBase) / yConv;
-    zScaled = (zVal - zBase) / zConv;
-
-// scale if mode change
-    if (MODE) {
-        xScaled *= GRAVITY;
-        yScaled *= GRAVITY;
-        zScaled *= GRAVITY;
+    while (!running) {
+        digitalWrite(collectPin, LOW);
     }
-    // make a string for assembling the data to log:
-    String dataString = "";
-    dataString += xScaled;
-    dataString += ",";
-    dataString += yScaled;
-    dataString += ",";
-    dataString += zScaled;
+    DataSet data = getData();
+
+    if (data.timestamp != timePrev) {
+        writeData(&data);
+        timePrev = data.timestamp;
 
 
-    // open the file. note that only one file can be open at a time,
-    // so you have to close this one before opening another.
-    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+        if (isLaunched == false) {
+            accel_vector = sqrt(pow(data.bAccel.x, 2) + pow(data.bAccel.y, 2) + pow(data.bAccel.z, 2));
+        }
+        if (accel_vector > 3) {
+            isLaunched = true;
+        }
+        if (isLaunched) {
+            postLaunchCount++;
 
-    // if the file is available, write to it:
-    if (dataFile) {
-        dataFile.println(dataString);
-        dataFile.close();
-        // print to the serial port too:
-        Serial.println(dataString);
+            if (postLaunchCount <= 175) { // when
+                analogWrite(37, 255);  // turn on motor (and for this test, change direction to 1 and torque to 255)
+                // analogWrite(39, 255);  //set direction
+                // analogWrite(40, 255);  //set max torque limit
+                analogWrite(38, 0);   // set speed 0
+
+            }
+            else if (175 < postLaunchCount < 325) {
+                // digitalWrite(37, HIGH);  //turn on motor
+                // digitalWrite(39, LOW);  //set direction
+                // analogWrite(40, 255);  //set max torque limit
+                analogWrite(38, 128); // set speed half
+            }
+            else if (325 <= postLaunchCount < 475) {
+                // digitalWrite(37, HIGH);  //turn on motor
+                // digitalWrite(39, LOW);  //set direction
+                // analogWrite(40, 255);  //set max torque limit
+                analogWrite(38, 255); // set speed full
+            }
+            else {
+                analogWrite(37, 0);   // turn off motor
+                // digitalWrite(39, LOW);  //set direction
+                // analogWrite(40, 0);    //set max torque limit
+                analogWrite(48, 0);   // set speed full
+                isLaunched = false;  // stop checking time
+            }
+        }
     }
-    // if the file isn't open, pop up an error:
-    else {
-        Serial.println("error opening datalog.txt");
-    }
+
 }

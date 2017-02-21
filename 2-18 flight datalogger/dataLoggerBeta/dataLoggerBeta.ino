@@ -16,8 +16,11 @@
 #include "utility/imumaths.h"
 
 // if debugging, set to 1, otherwise set to 0
-#define DEBUG 1
-
+#define DEBUG      0
+#define COLLECTPIN 16
+#define CALPIN     17
+#define OTHERPIN   14
+#define SPEEDPIN   15
 
 // ================= FUNCTION DECLARATIONS =================
 typedef struct {
@@ -93,6 +96,11 @@ String outputString;
 bool running = false;
 
 void setup() {
+    pinMode(13, OUTPUT);
+    pinMode(CALPIN, OUTPUT);
+    pinMode(COLLECTPIN, OUTPUT);
+    pinMode(23, INPUT);
+    digitalWrite(13, HIGH);
     delay(1000); // idk just leave this in
     pinMode(6, INPUT);
     // slow output console if debugging
@@ -105,18 +113,19 @@ void setup() {
 
     initializeBNO();
 
-    initializeAccel();
+    // initializeAccel();
 
-    initializeSD();
+    // initializeSD();
 
     // initialize interrupt timer MAKE SURE THIS IS LAST OR IDK WHAT HAPPENS
-    while (!digitalRead(6)) {
+    while (!digitalRead(23)) {
         ;
     }
 
     Serial.println("Starting Data Acquisition");
     running = true;
-    while (digitalRead(6)) {
+    digitalWrite(COLLECTPIN, HIGH);
+    while (digitalRead(23)) {
         ;
     }
     myTimer.begin(dataTick, delayTime);
@@ -126,72 +135,85 @@ void setup() {
 long postLaunchCount = 0;
 bool isLaunched = false;
 double accel_vector = 0;
+
 void dataTick() {
 
     DataSet data = getData();
 
-    writeData(&data);
-
-    if (isLaunched == false){
-        accel_vector = sqrt(pow((data.bAccel.x()),2) + pow((data.bAccel.y()),2) + pow((data.bAccel.z()),2));
+    // writeData(&data);
+    if (data.c.sysCal > 1) {
+        digitalWrite(CALPIN, HIGH);
     }
-    if (accel_vector> 3){
+    else {
+        digitalWrite(CALPIN, LOW);
+    }
+
+    if (isLaunched == false) {
+        accel_vector = sqrt(pow((data.bAccel.x()), 2) + pow((data.bAccel.y()), 2) + pow((data.bAccel.z()), 2));
+        Serial.println(accel_vector);
+    }
+    if (accel_vector > 3 * 9.8) {
         isLaunched = true;
     }
-    if (isLaunched){
+    if (isLaunched) {
         postLaunchCount++;
 
-        if (postLaunchCount <= 175) { //when
-            analogWrite(37, 255);  //turn on motor (and for this test, change direction to 1 and torque to 255)
-            //analogWrite(39, 255);  //set direction
-            //analogWrite(40, 255);  //set max torque limit
-            analogWrite(38, 0);   //set speed 0
+        if (postLaunchCount <= 175) { // when
+            analogWrite(OTHERPIN, 255);  // turn on motor (and for this test, change direction to 1 and torque to 255)
+            // analogWrite(39, 255);  //set direction
+            // analogWrite(40, 255);  //set max torque limit
+            analogWrite(SPEEDPIN, 0);   // set speed 0
+            Serial.println("stage1");
 
         }
-        else if (175 < postLaunchCount < 325)
-        {
-            //digitalWrite(37, HIGH);  //turn on motor
-            //digitalWrite(39, LOW);  //set direction
-            //analogWrite(40, 255);  //set max torque limit
-            analogWrite(38, 128); //set speed half
+        else if (175 < postLaunchCount && postLaunchCount < 325) {
+            // digitalWrite(37, HIGH);  //turn on motor
+            // digitalWrite(39, LOW);  //set direction
+            // analogWrite(40, 255);  //set max torque limit
+            analogWrite(SPEEDPIN, 128); // set speed half
+            Serial.println("stage2");
         }
-        else if (325 <= postLaunchCount < 475)
-        {
-            //digitalWrite(37, HIGH);  //turn on motor
-            //digitalWrite(39, LOW);  //set direction
-            //analogWrite(40, 255);  //set max torque limit
-            analogWrite(38, 255); //set speed full
+        else if (325 <= postLaunchCount && postLaunchCount < 475) {
+            // digitalWrite(37, HIGH);  //turn on motor
+            // digitalWrite(39, LOW);  //set direction
+            // analogWrite(40, 255);  //set max torque limit
+            analogWrite(SPEEDPIN, 255); // set speed full
+            Serial.println("stage3");
         }
-        else{
-            analogWrite(37, 0);   //turn off motor
-            //digitalWrite(39, LOW);  //set direction
-            //analogWrite(40, 0);    //set max torque limit
-            analogWrite(48, 0);   //set speed full
-            isLaunched = false;  //stop checking time
+        else {
+            analogWrite(OTHERPIN, 0);   // turn off motor
+            // digitalWrite(39, LOW);  //set direction
+            // analogWrite(40, 0);    //set max torque limit
+            analogWrite(SPEEDPIN, 0);   // set speed full
+            myTimer.end();  // stop checking time
+            digitalWrite(COLLECTPIN, LOW);
+            Serial.println("stagedone");
         }
     }
-    if (digitalRead(6)) {
+    if (digitalRead(23)) {
         delay(50);
-        if (digitalRead(6)) {
+        if (digitalRead(23)) {
             running = false;
             Serial.println("Stopping Data Aquisition");
             myTimer.end();
-            while (digitalRead(30)) {
+            digitalWrite(COLLECTPIN, LOW);
+            while (digitalRead(23)) {
                 ;
             }
 
             while (!running) {
-                if (digitalRead(6)) {
+                if (digitalRead(23)) {
                     delay(50);
-                    if (digitalRead(6)) {
+                    if (digitalRead(23)) {
                         running = true;
-                        while (digitalRead(6)) {
+                        digitalWrite(COLLECTPIN, HIGH);
+                        while (digitalRead(23)) {
                             ;
                         }
                     }
                 }
             }
-            newFile();
+            // newFile();
             Serial.println("Starting Data Aquisition");
             myTimer.begin(dataTick, delayTime);
         }
