@@ -6,7 +6,7 @@ void writeData(DataSet * d) {
     String dataString = "";
 
 // get time
-    dataString += d->timestamp;
+    dataString += d->time;
     dataString += ",";
     dataString += d->accel.x;
     dataString += ",";
@@ -49,7 +49,8 @@ void writeData(DataSet * d) {
         dataFile.println(dataString);
         dataFile.close();
         // print to the serial port too:
-        Serial.println(dataString);
+        
+        // Serial.println(dataString);
     }
 // if the file isn't open, pop up an error:
     else {

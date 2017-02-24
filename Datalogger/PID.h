@@ -9,8 +9,11 @@
 #ifndef PID_H
 #define PID_H
 #include "Datalogger.h"
-int calculatePID(DataSet * d);
+
+
+
+int calculatePID();
 void outputMotor(int power);
-void doTheThing(DataSet * d);
+void doTheThing(uint32_t timestamp);
 
 #endif

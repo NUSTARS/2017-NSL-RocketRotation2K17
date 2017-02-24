@@ -107,7 +107,7 @@ bool Adafruit_BNO055::begin(adafruit_bno055_opmode_t mode)
   write8(BNO055_AXIS_MAP_SIGN_ADDR, REMAP_SIGN_P2); // P0-P7, Default is P1
   delay(10);
   */
-  
+
   write8(BNO055_SYS_TRIGGER_ADDR, 0x0);
   delay(10);
   /* Set the requested operating mode (see section 3.3) */
@@ -398,6 +398,14 @@ bool Adafruit_BNO055::getEvent(sensors_event_t *event)
   event->orientation.x = euler.x();
   event->orientation.y = euler.y();
   event->orientation.z = euler.z();
+  imu::Vector<3> gyro = getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+  event->gyro.x = gyro.x();
+  event->gyro.y = gyro.y();
+  event->gyro.z = gyro.z();
+  imu::Vector<3> accel = getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+  event->acceleration.x = accel.x();
+  event->acceleration.y = accel.y();
+  event->acceleration.z = accel.z();
 
   return true;
 }

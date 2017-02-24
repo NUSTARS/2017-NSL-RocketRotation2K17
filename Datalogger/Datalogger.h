@@ -29,23 +29,28 @@ typedef struct {
     CalibrationData c;
 } DataSet;
 
+//============PIN DECLARATIONS
+extern int xInput, yInput, zInput;
+extern int chipSelect;
+extern int buttonPin, speedPin, motorPin, collectPin, calibrationPin;
+extern int pulsePin;
+extern int directionPin;
+
+//==================Filename Shenanigans
 extern char outputFile[100];
 extern String outputString;
 
-extern int buttonPin, speedPin, motorPin, collectPin, calibrationPin;
-extern int pulsePin;
 
+//WEIRD ACCELEROMETER STUFF
 extern int MODE, xMin, xMax, yMin, yMax, yMin, zMin, zMax;
-
-
 extern int xVal, yVal, zVal;
-extern int xInput, yInput, zInput;
-extern int chipSelect;
-
-externInt prevError
 
 extern float xBase, yBase, zBase, xConv, yConv, zConv, xScaled, yScaled, zScaled;
 
+//PID STUFF
+extern DataSet prevData, currentData;
 extern Adafruit_BNO055 bno;
+extern float kp, ki, kd;
+extern double launchGyro;
 
 #endif

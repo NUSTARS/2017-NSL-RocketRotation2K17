@@ -17,7 +17,7 @@
 
 // if debugging, set to 1, otherwise set to 0
 #define DEBUG      0
-#define COLLECTPIN 16
+#define COLLECTPIN 11
 #define CALPIN     17
 #define OTHERPIN   14
 #define SPEEDPIN   15
@@ -99,7 +99,7 @@ void setup() {
     pinMode(13, OUTPUT);
     pinMode(CALPIN, OUTPUT);
     pinMode(COLLECTPIN, OUTPUT);
-    pinMode(23, INPUT);
+    pinMode(11, INPUT);
     digitalWrite(13, HIGH);
     delay(1000); // idk just leave this in
     pinMode(6, INPUT);
@@ -118,7 +118,7 @@ void setup() {
     // initializeSD();
 
     // initialize interrupt timer MAKE SURE THIS IS LAST OR IDK WHAT HAPPENS
-    while (!digitalRead(23)) {
+    while (!digitalRead(11)) {
         ;
     }
 
@@ -190,24 +190,24 @@ void dataTick() {
             Serial.println("stagedone");
         }
     }
-    if (digitalRead(23)) {
+    if (digitalRead(11)) {
         delay(50);
-        if (digitalRead(23)) {
+        if (digitalRead(11)) {
             running = false;
             Serial.println("Stopping Data Aquisition");
             myTimer.end();
             digitalWrite(COLLECTPIN, LOW);
-            while (digitalRead(23)) {
+            while (digitalRead(11)) {
                 ;
             }
 
             while (!running) {
-                if (digitalRead(23)) {
+                if (digitalRead(11)) {
                     delay(50);
-                    if (digitalRead(23)) {
+                    if (digitalRead(11)) {
                         running = true;
                         digitalWrite(COLLECTPIN, HIGH);
-                        while (digitalRead(23)) {
+                        while (digitalRead(11)) {
                             ;
                         }
                     }
