@@ -21,8 +21,8 @@ int calculatePID() {
 
   //change in orientation = change in turn left
 
-  double xdot = (currentData.gyro.x-launchGyro) / (SENSORS_DPS_TO_RADS * 1000) * dt;
-
+  //double xdot = (currentData.gyro.x-launchGyro) / (SENSORS_DPS_TO_RADS * 1000) * dt;
+  double xdot = (currentData.gyro.x) / (SENSORS_DPS_TO_RADS * 1000) * dt;
   Serial.println(xdot);
 
   //set reference angular velocity

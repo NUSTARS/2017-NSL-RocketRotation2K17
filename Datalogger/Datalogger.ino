@@ -155,7 +155,7 @@ void loop() {
 
     if (currentData.time != prevData.time) {
       writeData(&currentData);
-      if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 3)) > 29.4 && !isLaunched) {
+      if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 29.4 && !isLaunched) {
         isLaunched = true;
         launchTimestamp = currentData.time;
         launchGyro = currentData.gyro.x;
