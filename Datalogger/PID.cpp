@@ -13,7 +13,7 @@
 int prevEI;
 int prevE = 720;
 float turnLeft = 720;
-
+int powerG;
 int calculatePID() {
   float u, pE, iE, dE;
   int dt = currentData.time - prevData.time;
@@ -22,7 +22,7 @@ int calculatePID() {
   //change in orientation = change in turn left
 
   double xdot = (currentData.gyro.x-launchGyro) / (SENSORS_DPS_TO_RADS * 1000) * dt;
-
+  //double xdot = (currentData.gyro.x) / (SENSORS_DPS_TO_RADS * 1000) * dt;
   Serial.println(xdot);
 
   //set reference angular velocity
@@ -53,7 +53,11 @@ int calculatePID() {
 }
 
 void outputMotor(int power) {
+  powerG = power;
   Serial.println(power);
+   Serial.println(powerG);
+  analogWrite(motorPin, 255);
+  analogWrite(torquePin, 255);
   if (power < 0) {
   
   analogWrite(directionPin, 255);
@@ -71,6 +75,10 @@ void doTheThing(uint32_t timestamp) {
   Serial.print(turnLeft);
   Serial.print("    power:  ");
   if (currentData.time-timestamp > 3000) {
+    if (launchGyro = 0) {
+      launchGyro = currentData.gyro.x;
+    }
+
     int u = calculatePID();
 
     if (u < 0) {

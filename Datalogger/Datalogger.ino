@@ -12,6 +12,7 @@
 #include "PID.h"
 
 
+
 // if debugging, set to 1, otherwise set to 0
 #define DEBUG 1
 
@@ -25,12 +26,15 @@ int xInput = 21;
 int yInput = 20;
 int zInput = 19;
 
-int buttonPin = 11; // input from button
-int speedPin = 37; // controls speed of motor
-int directionPin = 35;
-int motorPin = 30; // turns on and off motor
-int collectPin = 2; // led pin to see if its collecting data or not
-int calibrationPin = 3; // turns on LED when calibrated
+
+int buttonPin = 39; // input from button
+int directionPin = 35; //controls direction
+int speedPin = 36; // controls speed of motor
+int torquePin = 37; //torque limit
+int motorPin = 38; // turns on and off motor
+int collectPin = 14; // led pin to see if its collecting data or not
+int calibrationPin = 15; // turns on LED when calibrated
+int encoderPin = 16;
 int pulsePin = 39; // taking data from encoder on motor
 int builtInLED = 13;
 
@@ -46,6 +50,9 @@ float ki = 0.1;
 
 // I forgot what I made mode do lol
 int MODE = 0;
+
+
+
 
 //=======Accel VARIABLES=======================
 
@@ -94,6 +101,7 @@ void setup() {
   pinMode(calibrationPin, OUTPUT);
   pinMode(motorPin, OUTPUT);
   pinMode(collectPin, OUTPUT);
+  pinMode(torquePin, OUTPUT);
 
 
   // Open serial communications and wait for port to open:
@@ -147,20 +155,23 @@ void loop() {
     }
     }
   */
-
+  Serial.println("pls");
   if (running) {
     prevData = currentData;
     currentData = getData();
 
 
+
+
     if (currentData.time != prevData.time) {
-      writeData(&currentData);
-      if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 3)) > 29.4 && !isLaunched) {
+      Serial.println(powerG);
+      writeData(&currentData, powerG);
+      if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10 && !isLaunched) {
         isLaunched = true;
         launchTimestamp = currentData.time;
-        launchGyro = currentData.gyro.x;
+
       }
-      
+
       if (isLaunched) {
         digitalWrite(calibrationPin, HIGH);
         doTheThing(launchTimestamp);

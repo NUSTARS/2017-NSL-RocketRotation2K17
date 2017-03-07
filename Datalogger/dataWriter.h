@@ -2,6 +2,6 @@
 #ifndef DATAWRITER_H
 #define DATAWRITER_H
 #include "Datalogger.h"
-void writeData(DataSet * d);
+void writeData(DataSet * d, int power);
 
 #endif
