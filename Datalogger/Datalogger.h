@@ -35,6 +35,7 @@ extern int chipSelect;
 extern int buttonPin, speedPin, motorPin, collectPin, calibrationPin;
 extern int pulsePin;
 extern int directionPin;
+extern int torquePin;
 
 //==================Filename Shenanigans
 extern char outputFile[100];
@@ -52,5 +53,7 @@ extern DataSet prevData, currentData;
 extern Adafruit_BNO055 bno;
 extern float kp, ki, kd;
 extern double launchGyro;
+extern int powerG;
+
 
 #endif

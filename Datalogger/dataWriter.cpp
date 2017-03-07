@@ -1,6 +1,6 @@
 
 #include "dataWriter.h"
-void writeData(DataSet * d) {
+void writeData(DataSet * d, int power) {
 // make a string for assembling the d to log:
 // output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
     String dataString = "";
@@ -39,6 +39,8 @@ void writeData(DataSet * d) {
     dataString += d->c.bAccelCal;
     dataString += ",";
     dataString += d->c.magCal;
+    dataString += ",";
+    dataString += power;
 
 // open the file. note that only one file can be open at a time,
 // so you have to close this one before opening another
