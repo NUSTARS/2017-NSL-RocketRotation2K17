@@ -26,9 +26,9 @@ int yInput = 20;
 int zInput = 19;
 
 int buttonPin = 11; // input from button
-int speedPin = 35; // controls speed of motor
-int directionPin = 34;
-int motorPin = 36; // turns on and off motor
+int speedPin = 37; // controls speed of motor
+int directionPin = 35;
+int motorPin = 30; // turns on and off motor
 int collectPin = 2; // led pin to see if its collecting data or not
 int calibrationPin = 3; // turns on LED when calibrated
 int pulsePin = 39; // taking data from encoder on motor
