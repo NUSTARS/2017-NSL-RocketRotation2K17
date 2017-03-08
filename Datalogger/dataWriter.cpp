@@ -8,12 +8,6 @@ void writeData(DataSet * d, int power) {
 // get time
     dataString += d->time;
     dataString += ",";
-    dataString += d->accel.x;
-    dataString += ",";
-    dataString += d->accel.y;
-    dataString += ",";
-    dataString += d->accel.z;
-    dataString += ",";
     dataString += d->orientation.x;
     dataString += ",";
     dataString += d->orientation.y;
@@ -51,12 +45,15 @@ void writeData(DataSet * d, int power) {
         dataFile.println(dataString);
         dataFile.close();
         // print to the serial port too:
-        
-        // Serial.println(dataString);
+        #if DEBUG
+        Serial.println(dataString);
+        #endif
     }
 // if the file isn't open, pop up an error:
     else {
+        #if DEBUG
         Serial.print("error opening ");
         Serial.println(outputFile);
+        #else
     }
 }

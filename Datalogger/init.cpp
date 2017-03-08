@@ -38,14 +38,20 @@ void initializeAccel() {
 
 void initializeSD() {
     // initalize SD CARD
+    #if DEBUG
     Serial.print("Initializing SD card...");
+    #endif
     // see if the card is present and can be initialized:
     if (!SD.begin(chipSelect)) {
+        #if DEBUG
         Serial.println("Card failed, or not present");
+        #endif
         // don't do anything more:
         return;
     }
+    #if DEBUG
     Serial.println("card initialized.");
+    #endif
 
     newFile();
 }
@@ -62,8 +68,12 @@ void newFile() {
         outputString += ".csv";
         outputString.toCharArray(outputFile, 100);
     }
+    #if DEBUG
     Serial.print("Filename: ");
     Serial.println(outputString);
+
+    #endif
+
     // dont mind me I'm just making the excel easier to read
 
     String dataString = "Time,Accel_X,Accel_Y,Accel_Z,Orientation_X,Orientation_Y,Orientation_Z,Angular_Accel_X,Angular_Accel_Y,Angular_Accel_Z,BNO_Accel_X,BNO_Accel_Y,BNO_Accel_Z,Sys Calibration,Gyro Calibration,Accel Calibration,Mag Calibration, power";
@@ -75,12 +85,16 @@ void newFile() {
         dataFile.println(dataString);
         dataFile.close();
         // print to the serial port too:
+        #if DEBUG
         Serial.println(dataString);
+        #endif
     }
     // if the file isn't open, pop up an error:
     else {
+        #if DEBUG
         Serial.print("error opening ");
         Serial.println(outputFile);
+        #endif
     }
 }
 
@@ -88,7 +102,9 @@ void initializeBNO() {
     // initializes BNO and checks if there is a connection
     if (!bno.begin()) {
         /* There was a problem detecting the BNO055 ... check your connections */
+        #if DEBUG
         Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+        #endif
         while (1) {
             ;
         }

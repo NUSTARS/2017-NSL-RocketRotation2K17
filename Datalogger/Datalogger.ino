@@ -4,7 +4,7 @@
    @Email:  ichi@u.northwestern.edu
    @Last modified by:   Yichen Xu
    @Last modified time: 09-Feb-2017 19:02:52
-*/
+ */
 
 #include "init.h"
 #include "dataCollection.h"
@@ -13,8 +13,7 @@
 
 
 
-// if debugging, set to 1, otherwise set to 0
-#define DEBUG 1
+
 
 
 // ================= FUNCTION DECLARATIONS =================
@@ -28,9 +27,9 @@ int zInput = 19;
 
 
 int buttonPin = 39; // input from button
-int directionPin = 35; //controls direction
+int directionPin = 35; // controls direction
 int speedPin = 36; // controls speed of motor
-int torquePin = 37; //torque limit
+int torquePin = 37; // torque limit
 int motorPin = 38; // turns on and off motor
 int collectPin = 14; // led pin to see if its collecting data or not
 int calibrationPin = 15; // turns on LED when calibrated
@@ -52,9 +51,9 @@ float ki = 0.1;
 int MODE = 0;
 
 
+int waitTime = 3000;
 
-
-//=======Accel VARIABLES=======================
+// =======Accel VARIABLES=======================
 
 // min/max values for each axis
 // get from calibration sketch
@@ -79,43 +78,47 @@ int yVal = 0;
 int zVal = 0;
 
 
-//============BNO Declaration===============
+// ============BNO Declaration===============
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
-//===================FILENAME SHENANIGANS=============
+// ===================FILENAME SHENANIGANS=============
 char outputFile[100];
 String outputString;
 
-//is this stuff running?
+// is this stuff running?
 bool running = false;
 
-//void pause();
+// void pause();
 
 void setup() {
-  delay(1000); // idk just leave this in
+    delay(1000); // idk just leave this in
 
-  //initialize the digital pins
-  pinMode(buttonPin, INPUT_PULLUP);
-  pinMode(pulsePin, INPUT);
-  pinMode(builtInLED, OUTPUT);
-  pinMode(calibrationPin, OUTPUT);
-  pinMode(motorPin, OUTPUT);
-  pinMode(collectPin, OUTPUT);
-  pinMode(torquePin, OUTPUT);
-
-
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  digitalWrite(builtInLED, HIGH);
-
-  initializeBNO();
+    // initialize the digital pins
+    pinMode(buttonPin, INPUT_PULLUP);
+    pinMode(pulsePin, INPUT);
+    pinMode(builtInLED, OUTPUT);
+    pinMode(calibrationPin, OUTPUT);
+    pinMode(motorPin, OUTPUT);
+    pinMode(collectPin, OUTPUT);
+    pinMode(torquePin, OUTPUT);
 
 
-  initializeAccel();
+    // Open serial communications and wait for port to open:
+  #if DEBUG
+    Serial.begin(9600);
+    waitTime = 15000;
+  #endif
 
-  initializeSD();
+    digitalWrite(builtInLED, HIGH);
 
-  attachInterrupt(buttonPin, pause, FALLING);
+    initializeBNO();
+
+
+    initializeAccel();
+
+    initializeSD();
+
+    attachInterrupt(buttonPin, pause, FALLING);
 }
 
 
@@ -125,59 +128,62 @@ double accel_vector = 0;
 double launchGyro;
 
 void pause() {
-  delay(50);
-  if (!digitalRead(buttonPin)) {
+    delay(50);
+    if (!digitalRead(buttonPin)) {
 
-  isLaunched = false;
-  digitalWrite(calibrationPin, LOW);
-  running = !running;
-  Serial.println("pls");
-    if (running) {
-      digitalWrite(collectPin, HIGH);
-      newFile();
+        isLaunched = false;
+        digitalWrite(calibrationPin, LOW);
+        running = !running;
+        #if DEBUG
+        Serial.println("pls");
+        #endif
+
+        if (running) {
+            digitalWrite(collectPin, HIGH);
+            newFile();
+        }
+        else {
+            digitalWrite(collectPin, LOW);
+        }
     }
-    else digitalWrite(collectPin, LOW);
-  }
 }
 
 void loop() {
-  /*
-    if (digitalRead(buttonPin)) {
-    while (digitalRead(buttonPin)) {
-      ;
+    #if DEBUG
+    Serial.println("pls");
+    #endif DEBUG
+
+    if (running) {
+        prevData = currentData;
+        currentData = getData();
+        if (currentData.time != prevData.time) {
+
+            #if DEBUG
+            Serial.println(powerG);
+            isLaunched = true;
+            launchTimestamp = currentData.time;
+            #endif
+            writeData(&currentData, powerG);
+            if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10 && !isLaunched) {
+                isLaunched = true;
+                launchTimestamp = currentData.time;
+
+            }
+            if (launchTimestamp - currentData.time > 18000) {
+                outputMotor(0);
+                while(1) {
+                    digitalWrite(calibrationPin, !digitalRead(calibrationPin));
+                    delay(500);
+                }
+            }
+            if (isLaunched) {
+                digitalWrite(calibrationPin, HIGH);
+                doTheThing(launchTimestamp);
+            }
+
+
+        }
     }
-    running = !running;
-    if (!running) {
-      digitalWrite(collectPin,LOW);
-    }
-    else {
-      digitalWrite(collectPin,HIGH);
-    }
-    }
-  */
-  Serial.println("pls");
-  if (running) {
-    prevData = currentData;
-    currentData = getData();
-
-
-
-
-    if (currentData.time != prevData.time) {
-      Serial.println(powerG);
-      writeData(&currentData, powerG);
-      if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10 && !isLaunched) {
-        isLaunched = true;
-        launchTimestamp = currentData.time;
-
-      }
-
-      if (isLaunched) {
-        digitalWrite(calibrationPin, HIGH);
-        doTheThing(launchTimestamp);
-      }
-    }
-  }
 
 
 }

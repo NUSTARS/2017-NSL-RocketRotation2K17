@@ -1,19 +1,19 @@
 /**
-* @Author: Yichen Xu
-* @Date:   19-Feb-2017 23:02:38
-* @Email:  ichi@u.northwestern.edu
-* @Last modified by:   Yichen Xu
-* @Last modified time: 19-Feb-2017 23:02:48
-*/
+ * @Author: Yichen Xu
+ * @Date:   19-Feb-2017 23:02:38
+ * @Email:  ichi@u.northwestern.edu
+ * @Last modified by:   Yichen Xu
+ * @Last modified time: 19-Feb-2017 23:02:48
+ */
 
 #include "dataCollection.h"
 
 DataSet getData() {
     DataSet tempData;
     sensors_event_t event;
+
     bno.getEvent(&event);
     tempData.time = event.timestamp;
-    tempData.accel = getAccelData();
     tempData.orientation = event.orientation;
     tempData.gyro = event.gyro;
     tempData.bAccel = event.acceleration;

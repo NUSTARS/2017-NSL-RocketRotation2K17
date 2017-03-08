@@ -11,6 +11,10 @@
 #ifndef DATALOGGER_H
 #define DATALOGGER_H
 
+// if debugging, set to 1, otherwise set to 0
+#define DEBUG 1
+
+
 #include <SD.h>
 #include <SPI.h>
 #include <Wire.h>
@@ -54,6 +58,6 @@ extern Adafruit_BNO055 bno;
 extern float kp, ki, kd;
 extern double launchGyro;
 extern int powerG;
-
+extern int waitTime;
 
 #endif
