@@ -59,5 +59,7 @@ extern float kp, ki, kd;
 extern double launchGyro;
 extern int powerG;
 extern int waitTime;
+extern volatile float motorSpeed[5];
+extern float turnLeft, pE, dE, iE;
 
 #endif

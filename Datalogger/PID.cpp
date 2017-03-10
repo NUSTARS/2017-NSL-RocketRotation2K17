@@ -15,18 +15,21 @@ int prevE = 720;
 float turnLeft = 720;
 int powerG;
 int isLaunchGyroSet = 0;
+float pE, iE, dE;
+
 int calculatePID() {
-    float u, pE, iE, dE;
+    float u;
     int dt = currentData.time - prevData.time;
     // change this so that going across 0 and 360 doesnt involve a huge difference (degrees or radians?)
 
     // change in orientation = change in turn left
 
-    double xdot = (currentData.gyro.x - launchGyro) / (SENSORS_DPS_TO_RADS * 1000) * dt;
+    double xdot = ((currentData.gyro.x - launchGyro) / (SENSORS_DPS_TO_RADS * 1000)) * dt;
 
     // double xdot = (currentData.gyro.x) / (SENSORS_DPS_TO_RADS * 1000) * dt;
 
   #if DEBUG
+      Serial.print("    xDot:  ");
     Serial.println(xdot);
   #endif
 
@@ -40,17 +43,22 @@ int calculatePID() {
     turnLeft = turnLeft - xdot;
 
     pE = turnLeft * kp;
-    dE = dt * (turnLeft - prevE);
+    dE = (turnLeft - prevE)/dt;
+    //dE = dt * (turnLeft - prevE);
     prevE = turnLeft;
-    prevEI += turnLeft;
-    if (prevEI > 1550) {
-        prevEI = 1550;
+    
+    prevEI += turnLeft*dt;
+    //prevEI += turnleft;
+    
+    if (prevEI > 100/ki) {
+        prevEI = 100/ki;
     }
-    if (prevEI < 0) {
-        prevEI = 0;
+    if (prevEI < -100/ki) {
+        prevEI = -100/ki;
     }
     iE = prevEI * ki;
 
+    dE = kd*dE;
 
     u = iE + dE + pE;
 
@@ -60,11 +68,11 @@ int calculatePID() {
 void outputMotor(int power) {
     powerG = power;
     #if DEBUG
+    Serial.print("Power:   ");
     Serial.println(power);
-    Serial.println(powerG);
     #endif
     analogWrite(motorPin, 255);
-    analogWrite(torquePin, 255);
+    analogWrite(torquePin, 0);
     if (power < 0) {
 
         analogWrite(directionPin, 255);
@@ -81,9 +89,8 @@ void doTheThing(uint32_t timestamp) {
     Serial.print(currentData.time - timestamp);
     Serial.print("    turnleft:  ");
     Serial.print(turnLeft);
-    Serial.print("    power:  ");
     #endif
-    if (currentData.time - timestamp > waitTime) {
+    if ((currentData.time - timestamp) > waitTime) {
         if (!isLaunchGyroSet) {
             launchGyro = currentData.gyro.x;
             isLaunchGyroSet = !isLaunchGyroSet;

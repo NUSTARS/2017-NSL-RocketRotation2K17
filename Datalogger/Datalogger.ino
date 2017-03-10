@@ -33,23 +33,30 @@ int torquePin = 37; // torque limit
 int motorPin = 38; // turns on and off motor
 int collectPin = 14; // led pin to see if its collecting data or not
 int calibrationPin = 15; // turns on LED when calibrated
-int encoderPin = 16;
-int pulsePin = 39; // taking data from encoder on motor
+//int encoderPin = 16;
+int pulsePin = 23; // taking data from encoder on motor
 int builtInLED = 13;
 
+//TODO fill these out
+int directionReadPin = 20;
+int encoderMarks = 24;
 // ============VARIABLE DECLARATION============================
 
 // PID Variables;
 DataSet prevData;
 DataSet currentData;
-float kp = 0.2;
-float kd = 0.1;
+float kp = 0.5;
 float ki = 0.1;
+float kd = 1000;
 
 
 // I forgot what I made mode do lol
 int MODE = 0;
 
+volatile int encoderCounter;
+volatile int encoderTime;
+volatile float motorSpeed[5];
+volatile uint8_t motorSpeedIndex;
 
 int waitTime = 3000;
 
@@ -101,12 +108,13 @@ void setup() {
     pinMode(motorPin, OUTPUT);
     pinMode(collectPin, OUTPUT);
     pinMode(torquePin, OUTPUT);
+    pinMode(directionReadPin, INPUT);
 
 
     // Open serial communications and wait for port to open:
   #if DEBUG
     Serial.begin(9600);
-    waitTime = 15000;
+    waitTime = 5000;
   #endif
 
     digitalWrite(builtInLED, HIGH);
@@ -119,6 +127,7 @@ void setup() {
     initializeSD();
 
     attachInterrupt(buttonPin, pause, FALLING);
+    attachInterrupt(pulsePin, encoderReader, RISING);
 }
 
 
@@ -148,11 +157,27 @@ void pause() {
     }
 }
 
+void encoderReader() {
+    int tempTime = encoderTime;
+    encoderTime = micros();
+    tempTime = encoderTime - tempTime;
+    motorSpeedIndex = motorSpeedIndex%5;
+
+    if (digitalRead(directionReadPin)) {
+        motorSpeed[motorSpeedIndex] = 1000000/((float) tempTime * encoderMarks);
+    }
+    else {
+        motorSpeed[motorSpeedIndex] = -1000000/((float) tempTime * encoderMarks);
+    }
+
+    motorSpeedIndex ++;
+    
+
+}
 void loop() {
     #if DEBUG
     Serial.println("pls");
-    #endif DEBUG
-
+    #endif
     if (running) {
         prevData = currentData;
         currentData = getData();
@@ -160,8 +185,11 @@ void loop() {
 
             #if DEBUG
             Serial.println(powerG);
-            isLaunched = true;
+
+            if (!isLaunched) {
             launchTimestamp = currentData.time;
+            }
+            isLaunched = true;
             #endif
             writeData(&currentData, powerG);
             if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10 && !isLaunched) {
@@ -169,13 +197,15 @@ void loop() {
                 launchTimestamp = currentData.time;
 
             }
-            if (launchTimestamp - currentData.time > 18000) {
+            
+            if ((currentData.time - launchTimestamp ) > (18000+waitTime)) {
                 outputMotor(0);
                 while(1) {
                     digitalWrite(calibrationPin, !digitalRead(calibrationPin));
                     delay(500);
                 }
             }
+            
             if (isLaunched) {
                 digitalWrite(calibrationPin, HIGH);
                 doTheThing(launchTimestamp);

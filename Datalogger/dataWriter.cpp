@@ -1,8 +1,16 @@
 
 #include "dataWriter.h"
+
 void writeData(DataSet * d, int power) {
 // make a string for assembling the d to log:
 // output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
+
+    double avgSpeed = 0.000;
+    for (int i = 0; i< 5; i++) {
+        avgSpeed += motorSpeed[i];
+    }
+    avgSpeed = avgSpeed/5;
+
     String dataString = "";
 
 // get time
@@ -35,6 +43,17 @@ void writeData(DataSet * d, int power) {
     dataString += d->c.magCal;
     dataString += ",";
     dataString += power;
+    dataString += ",";
+    dataString += avgSpeed;
+    dataString += ",";
+    dataString += turnLeft;
+    dataString += ",";
+    dataString += pE;
+    dataString += ",";
+    dataString += iE;
+    dataString += ",";
+    dataString += dE;
+    
 
 // open the file. note that only one file can be open at a time,
 // so you have to close this one before opening another
@@ -54,6 +73,6 @@ void writeData(DataSet * d, int power) {
         #if DEBUG
         Serial.print("error opening ");
         Serial.println(outputFile);
-        #else
+        #endif
     }
 }
