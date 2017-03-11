@@ -45,9 +45,9 @@ int encoderMarks = 24;
 // PID Variables;
 DataSet prevData;
 DataSet currentData;
-float kp = 0.5;
-float ki = 0.1;
-float kd = 1000;
+float kp = 10;
+float ki = 0;
+float kd = 0;
 
 
 // I forgot what I made mode do lol

@@ -61,5 +61,6 @@ extern int powerG;
 extern int waitTime;
 extern volatile float motorSpeed[5];
 extern float turnLeft, pE, dE, iE;
+extern uint32_t launchTimestamp;
 
 #endif

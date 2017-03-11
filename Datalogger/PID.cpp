@@ -17,6 +17,7 @@ int powerG;
 int isLaunchGyroSet = 0;
 float pE, iE, dE;
 
+
 int calculatePID() {
     float u;
     int dt = currentData.time - prevData.time;
@@ -42,12 +43,13 @@ int calculatePID() {
 
     turnLeft = turnLeft - xdot;
 
-    pE = turnLeft * kp;
-    dE = (turnLeft - prevE)/dt;
+    float error = calculateError();
+    pE = error * kp;
+    dE = (error - prevE)/dt;
     //dE = dt * (turnLeft - prevE);
-    prevE = turnLeft;
+    prevE = error;
     
-    prevEI += turnLeft*dt;
+    prevEI += error*dt;
     //prevEI += turnleft;
     
     if (prevEI > 100/ki) {
@@ -73,7 +75,7 @@ void outputMotor(int power) {
     #endif
     analogWrite(motorPin, 255);
     analogWrite(torquePin, 0);
-    if (power < 0) {
+    if (power > 0) {
 
         analogWrite(directionPin, 255);
         analogWrite(speedPin, abs(power));
@@ -89,6 +91,7 @@ void doTheThing(uint32_t timestamp) {
     Serial.print(currentData.time - timestamp);
     Serial.print("    turnleft:  ");
     Serial.print(turnLeft);
+    
     #endif
     if ((currentData.time - timestamp) > waitTime) {
         if (!isLaunchGyroSet) {
@@ -108,7 +111,23 @@ void doTheThing(uint32_t timestamp) {
             if (u > 255) {
                 u = 255;
             }
+            
             outputMotor(u);
         }
     }
 }
+
+float calculateError() {
+  uint32_t timeElapsed = currentData.time - launchTimestamp-5000;
+  float errorT = 720-(720/5000)*timeElapsed;
+  Serial.print("timeElapsed: ");
+  Serial.print(timeElapsed);
+  if (errorT < 0) {
+    errorT = 0;
+}
+  Serial.print("error: ");
+  Serial.println(turnLeft - errorT);
+  return turnLeft - errorT;
+
+}
+
