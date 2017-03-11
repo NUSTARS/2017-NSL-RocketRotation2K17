@@ -45,9 +45,9 @@ int encoderMarks = 24;
 // PID Variables;
 DataSet prevData;
 DataSet currentData;
-float kp = 10;
+float kp = .339;
 float ki = 0;
-float kd = .1;
+float kd = .065;
 
 
 // I forgot what I made mode do lol
@@ -189,8 +189,9 @@ void loop() {
             if (!isLaunched) {
             launchTimestamp = currentData.time;
             }
-            isLaunched = true;
+            //isLaunched = true;
             #endif
+            
             writeData(&currentData, powerG);
             if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10 && !isLaunched) {
                 isLaunched = true;
@@ -198,7 +199,7 @@ void loop() {
 
             }
             
-            if ((currentData.time - launchTimestamp ) > (18000+waitTime)) {
+            if (((currentData.time - launchTimestamp ) > (18000+waitTime))&& isLaunched) {
                 outputMotor(0);
                 while(1) {
                     digitalWrite(calibrationPin, !digitalRead(calibrationPin));

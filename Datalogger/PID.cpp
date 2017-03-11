@@ -11,8 +11,8 @@
 #include "PID.h"
 
 int prevEI;
-int prevE = 720;
-float turnLeft = 720;
+int prevE = 750;
+float turnLeft = 750;
 int powerG;
 int isLaunchGyroSet = 0;
 float pE, iE, dE;
@@ -79,7 +79,7 @@ int calculatePID() {
 
     u = iE + dE + pE;
 
-    return -1*u;
+    return u;
 }
 
 void outputMotor(int power) {
@@ -134,7 +134,7 @@ void doTheThing(uint32_t timestamp) {
 
 float calculateError(void) {
   int timeElapsed = currentData.time - launchTimestamp-5000;
-  float errorT = 720-(720*timeElapsed)/5000;
+  float errorT = 750-(750*timeElapsed)/5000;
   Serial.print("timeElapsed: ");
   Serial.println(timeElapsed);
   if (errorT < 0) {
