@@ -47,7 +47,7 @@ DataSet prevData;
 DataSet currentData;
 float kp = 10;
 float ki = 0;
-float kd = 0;
+float kd = .1;
 
 
 // I forgot what I made mode do lol
