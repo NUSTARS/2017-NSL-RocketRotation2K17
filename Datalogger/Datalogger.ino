@@ -171,7 +171,7 @@ void encoderReader() {
     }
 
     motorSpeedIndex ++;
-    
+
 
 }
 void loop() {
@@ -189,24 +189,24 @@ void loop() {
             if (!isLaunched) {
             launchTimestamp = currentData.time;
             }
-            //isLaunched = true;
+            isLaunched = true;
             #endif
-            
+
             writeData(&currentData, powerG);
-            if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10 && !isLaunched) {
+            if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 30 && !isLaunched) {
                 isLaunched = true;
                 launchTimestamp = currentData.time;
 
             }
-            
-            if (((currentData.time - launchTimestamp ) > (18000+waitTime))&& isLaunched) {
+
+            if (((currentData.time - launchTimestamp ) > (5000+waitTime))&& isLaunched) {
                 outputMotor(0);
                 while(1) {
                     digitalWrite(calibrationPin, !digitalRead(calibrationPin));
                     delay(500);
                 }
             }
-            
+
             if (isLaunched) {
                 digitalWrite(calibrationPin, HIGH);
                 doTheThing(launchTimestamp);
