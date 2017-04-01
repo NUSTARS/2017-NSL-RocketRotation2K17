@@ -3,7 +3,7 @@
    @Date:   19-Feb-2017 23:02:34
    @Email:  ichi@u.northwestern.edu
 * @Last modified by:   Yichen Xu
-* @Last modified time: 2017-04-01T15:13:46-05:00
+* @Last modified time: 2017-04-01T15:36:46-05:00
  */
 
 
@@ -81,11 +81,11 @@ int calculatePID() {
 
 
         // Anti integrator windup part
-        if (prevEI > 100 / ki) {
-                prevEI = 100 / ki;
+        if (prevEI > 40 / ki) {
+                prevEI = 40 / ki;
         }
-        if (prevEI < -100 / ki) {
-                prevEI = -100 / ki;
+        if (prevEI < -40 / ki) {
+                prevEI = -40 / ki;
         }
 
         // scales iE
@@ -145,7 +145,7 @@ void doTheThing(uint32_t startTime) {
 #if DEBUG
                         Serial.println(launchGyro / SENSORS_DPS_TO_RADS);
 #endif
-                        if (((launchGyro / SENSORS_DPS_TO_RADS) > initalVelocityThreshold)||(abs(launchGyro/SENSORS_DPS_TO_RADS)<50)) {
+                        if (abs(launchGyro/SENSORS_DPS_TO_RADS)<50) {
                                 // if it is, we do the PID only method of contolling it
                                 plan = PID;
                         }

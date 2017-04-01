@@ -3,7 +3,7 @@
    @Date:   09-Feb-2017 19:02:46
    @Email:  ichi@u.northwestern.edu
 * @Last modified by:   Yichen Xu
-* @Last modified time: 2017-04-01T14:31:04-05:00
+* @Last modified time: 2017-04-01T15:29:24-05:00
  */
 
 #include "init.h"
@@ -47,7 +47,7 @@ int encoderMarks = 24;
 DataSet prevData;
 DataSet currentData;
 float kp = 1;
-float ki = 0;//0.000015;//0.00015
+float ki = 0.00000015;//0.000015;//0.00015
 float kd = .065; // 0.065
 float kreset = 1;
 
