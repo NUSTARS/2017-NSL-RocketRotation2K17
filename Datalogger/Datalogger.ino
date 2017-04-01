@@ -11,7 +11,7 @@
 #include "dataWriter.h"
 #include "PID.h"
 
-#define RUNTIME 18000
+#define RUNTIME 15000
 
 
 
@@ -47,7 +47,7 @@ int encoderMarks = 24;
 DataSet prevData;
 DataSet currentData;
 float kp = 1;
-float ki = 0.00015;
+float ki = 0;//0.000015;//0.00015
 float kd = .065; // 0.065
 float kreset = 1;
 
@@ -111,6 +111,7 @@ void setup() {
     pinMode(collectPin, OUTPUT);
     pinMode(torquePin, OUTPUT);
     pinMode(directionReadPin, INPUT);
+    pinMode(directionPin, OUTPUT);
 
 
     // Open serial communications and wait for port to open:
@@ -165,10 +166,13 @@ void pause() {
         // If now running, make a new file and turn Red LED on
         if (running) {
             digitalWrite(collectPin, HIGH);
+            
             newFile();
         }
         else {
             digitalWrite(collectPin, LOW);
+            dataFile.close();
+            resetController();
         }
     }
 }

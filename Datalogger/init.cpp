@@ -52,8 +52,6 @@ void initializeSD() {
     #if DEBUG
     Serial.println("card initialized.");
     #endif
-
-    newFile();
 }
 
 //Makes a new file
@@ -78,7 +76,7 @@ void newFile() {
 
     String dataString = "Time,Orientation_X,Orientation_Y,Orientation_Z,Angular_Accel_X,Angular_Accel_Y,Angular_Accel_Z,BNO_Accel_X,BNO_Accel_Y,BNO_Accel_Z,Sys Calibration,Gyro Calibration,Accel Calibration,Mag Calibration, power, Motor Speed, turnLeft, pE, iE, dE";
 
-    File dataFile = SD.open(outputFile, FILE_WRITE);
+    dataFile = SD.open(outputFile, FILE_WRITE);
 
     // if the file is available, write to it:
     if (dataFile) {

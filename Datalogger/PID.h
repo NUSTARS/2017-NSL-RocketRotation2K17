@@ -17,5 +17,6 @@ void outputMotor(int power);
 void doTheThing(uint32_t timestamp);
 float calculateError();
 int resetVelocity();
+void resetController();
 
 #endif
