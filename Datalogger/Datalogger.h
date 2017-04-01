@@ -23,6 +23,7 @@
 #include "utility/imumaths.h"
 #include <stdio.h>
 
+//basically everything is an Extern to simplify and speed up code.
 typedef struct {
     uint8_t sysCal, gyroCal, bAccelCal, magCal;
 } CalibrationData;
@@ -41,7 +42,7 @@ extern int pulsePin;
 extern int directionPin;
 extern int torquePin;
 
-//==================Filename Shenanigans
+//==================File Shenanigans
 extern char outputFile[100];
 extern String outputString;
 

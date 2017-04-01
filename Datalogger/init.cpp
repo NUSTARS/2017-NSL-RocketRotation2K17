@@ -56,7 +56,7 @@ void initializeSD() {
     newFile();
 }
 
-
+//Makes a new file
 void newFile() {
     outputString = "data0.csv";
     outputString.toCharArray(outputFile, 100);
@@ -98,6 +98,7 @@ void newFile() {
     }
 }
 
+//Initializes BNO
 void initializeBNO() {
     // initializes BNO and checks if there is a connection
     if (!bno.begin()) {

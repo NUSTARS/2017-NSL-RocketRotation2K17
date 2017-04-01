@@ -33,11 +33,11 @@ int torquePin = 38; // torque limit
 int motorPin = 35; // turns on and off motor
 int collectPin = 14; // led pin to see if its collecting data or not
 int calibrationPin = 15; // turns on LED when calibrated
-//int encoderPin = 16;
+// int encoderPin = 16;
 int pulsePin = 23; // taking data from encoder on motor
 int builtInLED = 13;
 
-//TODO fill these out
+// TODO fill these out
 int directionReadPin = 20;
 int encoderMarks = 24;
 // ============VARIABLE DECLARATION============================
@@ -47,7 +47,7 @@ DataSet prevData;
 DataSet currentData;
 float kp = 1;
 float ki = 0.00015;
-float kd = .065; //0.065
+float kd = .065; // 0.065
 
 
 // I forgot what I made mode do lol
@@ -117,39 +117,50 @@ void setup() {
     waitTime = 5000;
   #endif
 
+    // Enable onboard LED to show that the program is running
     digitalWrite(builtInLED, HIGH);
 
+    // Initalize all the sensors and SD Card
     initializeBNO();
-
-
-    initializeAccel();
-
+    initializeAccel();   // This technically does nothign since we arent using the accelerometer
     initializeSD();
 
+    // Turns motor on, and sets the torque to be 100 out of 255
     analogWrite(motorPin, 255);
-    analogWrite(torquePin, 100);  
+    analogWrite(torquePin, 100);
     analogWrite(speedPin, 0);
+
+    // Attatches interrupts for the buttons and pulses
     attachInterrupt(buttonPin, pause, FALLING);
     attachInterrupt(pulsePin, encoderReader, RISING);
 }
 
 
+// More varaibles needed for just the motor portion
 uint32_t launchTimestamp = 0;
 bool isLaunched = false;
 double accel_vector = 0;
 double launchGyro;
 
+// function to pause and start the prgram when the button is pressed.
+// Program starts off in the paused state
 void pause() {
+    // Debouncing Delay
     delay(50);
-    if (!digitalRead(buttonPin)) {
 
+    if (!digitalRead(buttonPin)) {
+        // Is not launched, tuns green LED off
         isLaunched = false;
         digitalWrite(calibrationPin, LOW);
+
+        // toggle Running
         running = !running;
+
         #if DEBUG
         Serial.println("pls");
         #endif
 
+        // If now running, make a new file and turn Red LED on
         if (running) {
             digitalWrite(collectPin, HIGH);
             newFile();
@@ -160,61 +171,90 @@ void pause() {
     }
 }
 
-void encoderReader() {
-    int tempTime = encoderTime;
-    encoderTime = micros();
-    tempTime = encoderTime - tempTime;
-    motorSpeedIndex = motorSpeedIndex%5;
 
+// Reads the Encode for ticks. There are 12 ticks per revolution
+void encoderReader() {
+    // Temporary variable to store encoder time
+    int tempTime = encoderTime;
+
+    // get Encoder time in microseconds
+    encoderTime = micros();
+
+    // calculate time since last tik
+    tempTime = encoderTime - tempTime;
+
+    // counter for motor speed matrix. Used to calculate a moving average
+    motorSpeedIndex = motorSpeedIndex % 5;
+
+    // check direction of motor
     if (digitalRead(directionReadPin)) {
-        motorSpeed[motorSpeedIndex] = 1000000/((float) tempTime * encoderMarks);
+
+        // calculate speed for forward direction
+        motorSpeed[motorSpeedIndex] = 1000000 / ((float) tempTime * encoderMarks);
     }
     else {
-        motorSpeed[motorSpeedIndex] = -1000000/((float) tempTime * encoderMarks);
+        // calculate for other direction
+        motorSpeed[motorSpeedIndex] = -1000000 / ((float) tempTime * encoderMarks);
     }
 
-    motorSpeedIndex ++;
-    
-
+    // increment Motor speed index
+    motorSpeedIndex++;
 }
+
+// Main loop of the program
 void loop() {
+
     #if DEBUG
-    Serial.println("pls");
+    Serial.println("looping");
     #endif
+
+    // Only run this if the button has been paused to unpause the code
     if (running) {
+
+        // set prevData to be current old data and then grab new data
         prevData = currentData;
         currentData = getData();
+
+        // makes sure the timestamps change. It always does
         if (currentData.time != prevData.time) {
 
             #if DEBUG
+            // If in debug mode, print stuff, and also just launch at start of program without accelerometer trigger
             Serial.println(powerG);
-
             if (!isLaunched) {
-            launchTimestamp = currentData.time;
+                launchTimestamp = currentData.time;
             }
             isLaunched = true;
             #endif
-            
+
+            // write data gotten to SD card
             writeData(&currentData, powerG);
-            if ((sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10) && !isLaunched) {
+
+            // Accelerometer based launch trigger, set to when the entire system gets above 20 m/s^2 in all directions total
+            if ((sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 20) && !isLaunched) {
+                // sets Launched togged to true, and grabs the launch timestamp as the current timestamp
                 isLaunched = true;
                 launchTimestamp = currentData.time;
+            }
 
-            }
-            
-            if (((currentData.time - launchTimestamp ) > (18000+waitTime))&& isLaunched) {
-                outputMotor(0);
-                while(1) {
-                    digitalWrite(calibrationPin, !digitalRead(calibrationPin));
-                    delay(500);
-                }
-            }
-            
+
             if (isLaunched) {
                 digitalWrite(calibrationPin, HIGH);
                 doTheThing(launchTimestamp);
             }
 
+
+            // If time is greater than a limit set, kills the motor
+            if (((currentData.time - launchTimestamp ) > (18000 + waitTime)) && isLaunched) {
+                // Kills motor, stopping as fast as possible
+                outputMotor(0);
+                // stays in this mode until button is pressed. At which point program resets in theory
+                while (isLaunched) {
+                    //basically toggles green LED
+                    digitalWrite(calibrationPin, !digitalRead(calibrationPin));
+                    delay(500);
+                }
+            }
 
         }
     }
