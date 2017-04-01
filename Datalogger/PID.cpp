@@ -19,6 +19,9 @@ float pE, iE, dE;
 float dAvg[5];
 int dAvgPoint = 0;
 
+//target time for trajectory
+int targetTime = 5000;
+
 // Actually a PSD controller
 int calculatePID() {
     float u;
@@ -155,18 +158,26 @@ void doTheThing(uint32_t startTime) {
 
 //Generates a linear trajectory to reach the desired position.
 float calculateError(void) {
-    int timeElapsed = currentData.time - launchTimestamp - 5000;
-    float errorT = 650 - (750 * timeElapsed) / 5000;
-
+    //get time elasped, which is currentTime - launchTime - waitTime
+    int timeElapsed = currentData.time - launchTimestamp - waitTime;
+    //this is kinda like how far from the target we should be
+    float errorT = 650 - (750 * timeElapsed) / targetTime;
+    #if DEBUG
     Serial.print("timeElapsed: ");
     Serial.println(timeElapsed);
+    #endif
+    //we dont want this to keep going forever
     if (errorT < 0) {
         errorT = 0;
     }
+
+    #if DEBUG
     Serial.print("error: ");
     Serial.println(turnLeft - errorT);
+    #endif
+
+    //we take turnLeft - errorT to get a line going from (750-650) to 750 in targetTime ms
     errorT = turnLeft - errorT;
 
     return errorT;
-
 }

@@ -59,12 +59,10 @@ void writeData(DataSet * d, int power) {
 
 // open the file. note that only one file can be open at a time,
 // so you have to close this one before opening another
-    File dataFile = SD.open(outputFile, FILE_WRITE);
 
 // if the file is available, write to it:
     if (dataFile) {
         dataFile.println(dataString);
-        dataFile.close();
         // print to the serial port too:
         #if DEBUG
         Serial.println(dataString);

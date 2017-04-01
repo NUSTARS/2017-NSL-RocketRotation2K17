@@ -83,7 +83,7 @@ void newFile() {
     // if the file is available, write to it:
     if (dataFile) {
         dataFile.println(dataString);
-        dataFile.close();
+
         // print to the serial port too:
         #if DEBUG
         Serial.println(dataString);

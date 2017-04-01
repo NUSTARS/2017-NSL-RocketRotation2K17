@@ -45,7 +45,7 @@ extern int torquePin;
 //==================File Shenanigans
 extern char outputFile[100];
 extern String outputString;
-
+extern File dataFile;
 
 //WEIRD ACCELEROMETER STUFF
 extern int MODE, xMin, xMax, yMin, yMax, yMin, zMin, zMax;

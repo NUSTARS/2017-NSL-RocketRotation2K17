@@ -91,6 +91,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 // ===================FILENAME SHENANIGANS=============
 char outputFile[100];
 String outputString;
+File dataFile;
 
 // is this stuff running?
 bool running = false;
@@ -248,6 +249,9 @@ void loop() {
             if (((currentData.time - launchTimestamp ) > (18000 + waitTime)) && isLaunched) {
                 // Kills motor, stopping as fast as possible
                 outputMotor(0);
+
+                //closes file
+                dataFile.close();
                 // stays in this mode until button is pressed. At which point program resets in theory
                 while (isLaunched) {
                     //basically toggles green LED
