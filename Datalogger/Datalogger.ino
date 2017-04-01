@@ -11,6 +11,8 @@
 #include "dataWriter.h"
 #include "PID.h"
 
+#define RUNTIME 18000
+
 
 
 
@@ -37,7 +39,6 @@ int calibrationPin = 15; // turns on LED when calibrated
 int pulsePin = 23; // taking data from encoder on motor
 int builtInLED = 13;
 
-// TODO fill these out
 int directionReadPin = 20;
 int encoderMarks = 24;
 // ============VARIABLE DECLARATION============================
@@ -48,7 +49,7 @@ DataSet currentData;
 float kp = 1;
 float ki = 0.00015;
 float kd = .065; // 0.065
-
+float kreset = 1;
 
 // I forgot what I made mode do lol
 int MODE = 0;
@@ -246,7 +247,7 @@ void loop() {
 
 
             // If time is greater than a limit set, kills the motor
-            if (((currentData.time - launchTimestamp ) > (18000 + waitTime)) && isLaunched) {
+            if (((currentData.time - launchTimestamp ) > (RUNTIME + waitTime)) && isLaunched) {
                 // Kills motor, stopping as fast as possible
                 outputMotor(0);
 

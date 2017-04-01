@@ -16,5 +16,6 @@ int calculatePID();
 void outputMotor(int power);
 void doTheThing(uint32_t timestamp);
 float calculateError();
+int resetVelocity();
 
 #endif

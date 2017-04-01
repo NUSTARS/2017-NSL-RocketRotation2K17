@@ -56,7 +56,7 @@ extern float xBase, yBase, zBase, xConv, yConv, zConv, xScaled, yScaled, zScaled
 //PID STUFF
 extern DataSet prevData, currentData;
 extern Adafruit_BNO055 bno;
-extern float kp, ki, kd;
+extern float kp, ki, kd, kreset;
 extern double launchGyro;
 extern int powerG;
 extern int waitTime;
