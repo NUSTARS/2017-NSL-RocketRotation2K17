@@ -2,8 +2,8 @@
    @Author: Yichen Xu
    @Date:   09-Feb-2017 19:02:46
    @Email:  ichi@u.northwestern.edu
-   @Last modified by:   Yichen Xu
-   @Last modified time: 09-Feb-2017 19:02:52
+* @Last modified by:   Yichen Xu
+* @Last modified time: 2017-04-01T14:31:04-05:00
  */
 
 #include "init.h"
@@ -166,7 +166,7 @@ void pause() {
         // If now running, make a new file and turn Red LED on
         if (running) {
             digitalWrite(collectPin, HIGH);
-            
+
             newFile();
         }
         else {
@@ -237,7 +237,7 @@ void loop() {
             writeData(&currentData, powerG);
 
             // Accelerometer based launch trigger, set to when the entire system gets above 20 m/s^2 in all directions total
-            if ((sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 20) && !isLaunched) {
+            if ((sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 5) && !isLaunched) {
                 // sets Launched togged to true, and grabs the launch timestamp as the current timestamp
                 isLaunched = true;
                 launchTimestamp = currentData.time;
