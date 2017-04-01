@@ -15,7 +15,7 @@
 #define DEBUG 1
 
 
-#include <SDfat.h>
+#include <SD.h>
 #include <SPI.h>
 #include <Wire.h>
 #include "Adafruit_Sensor.h"
@@ -31,6 +31,7 @@ typedef struct {
     int32_t time;
     sensors_vec_t accel, orientation, gyro, bAccel;
     CalibrationData c;
+    int power;
 } DataSet;
 
 //============PIN DECLARATIONS
@@ -44,7 +45,7 @@ extern int torquePin;
 //==================Filename Shenanigans
 extern char outputFile[100];
 extern String outputString;
-extern SdFatSdio sd;
+
 
 //WEIRD ACCELEROMETER STUFF
 extern int MODE, xMin, xMax, yMin, yMax, yMin, zMin, zMax;
@@ -54,7 +55,7 @@ extern float xBase, yBase, zBase, xConv, yConv, zConv, xScaled, yScaled, zScaled
 
 //PID STUFF
 extern DataSet prevData, currentData;
-extern Dataset sensorData[16];
+extern DataSet sensorData[16];
 extern uint8_t dataCounter;
 extern Adafruit_BNO055 bno;
 extern float kp, ki, kd;
@@ -64,5 +65,6 @@ extern int waitTime;
 extern volatile float motorSpeed[5];
 extern float turnLeft, pE, dE, iE;
 extern uint32_t launchTimestamp;
+extern File dataFile;
 
 #endif

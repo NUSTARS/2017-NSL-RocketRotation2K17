@@ -42,7 +42,7 @@ void initializeSD() {
     Serial.print("Initializing SD card...");
     #endif
     // see if the card is present and can be initialized:
-    if (!sd.begin(chipSelect)) {
+    if (!SD.begin(chipSelect)) {
         #if DEBUG
         Serial.println("Card failed, or not present");
         #endif
@@ -61,7 +61,7 @@ void newFile() {
     outputString = "data0.csv";
     outputString.toCharArray(outputFile, 100);
     int i = 0;
-    while (sd.exists(outputFile)) {
+    while (SD.exists(outputFile)) {
         i++;
         outputString = "data";
         outputString += String(i);
@@ -78,7 +78,7 @@ void newFile() {
 
     String dataString = "Time,Orientation_X,Orientation_Y,Orientation_Z,Angular_Accel_X,Angular_Accel_Y,Angular_Accel_Z,BNO_Accel_X,BNO_Accel_Y,BNO_Accel_Z,Sys Calibration,Gyro Calibration,Accel Calibration,Mag Calibration, power, Motor Speed, turnLeft, pE, iE, dE";
 
-    File dataFile = sd.open(outputFile, FILE_WRITE);
+    File dataFile = SD.open(outputFile, FILE_WRITE);
 
     // if the file is available, write to it:
     if (dataFile) {

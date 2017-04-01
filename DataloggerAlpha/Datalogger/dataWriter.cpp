@@ -4,7 +4,7 @@
 void writeData(DataSet d[]) {
 // make a string for assembling the d to log:
 // output time,xAccel,yAccel,zAccel,OrienX,OrienY,OrienZ,angVx,AngVy,bnoAccelx,bnoAccely,bnoAccelz
-    tring dataString = "";
+    String dataString = "";
 
     for (int i = 0; i < 16; i++) {
         double avgSpeed = 0.000;
@@ -59,12 +59,12 @@ void writeData(DataSet d[]) {
 
 // open the file. note that only one file can be open at a time,
 // so you have to close this one before opening another
-    File dataFile = sd.open(outputFile, FILE_WRITE);
+   
 
 // if the file is available, write to it:
     if (dataFile) {
         dataFile.println(dataString);
-        dataFile.close();
+
         // print to the serial port too:
         #if DEBUG
         Serial.println(dataString);

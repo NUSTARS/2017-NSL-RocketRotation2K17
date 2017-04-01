@@ -89,7 +89,7 @@ void outputMotor(int power) {
     Serial.println(power);
     #endif
     analogWrite(motorPin, 255);
-    analogWrite(torquePin, 0);
+    analogWrite(torquePin, 100);
     if (power > 0) {
 
         analogWrite(directionPin, 255);

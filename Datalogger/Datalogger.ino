@@ -27,10 +27,10 @@ int zInput = 19;
 
 
 int buttonPin = 39; // input from button
-int directionPin = 35; // controls direction
-int speedPin = 36; // controls speed of motor
-int torquePin = 37; // torque limit
-int motorPin = 38; // turns on and off motor
+int directionPin = 36; // controls direction
+int speedPin = 37; // controls speed of motor
+int torquePin = 38; // torque limit
+int motorPin = 35; // turns on and off motor
 int collectPin = 14; // led pin to see if its collecting data or not
 int calibrationPin = 15; // turns on LED when calibrated
 //int encoderPin = 16;
@@ -45,9 +45,9 @@ int encoderMarks = 24;
 // PID Variables;
 DataSet prevData;
 DataSet currentData;
-float kp = .339;
-float ki = 0;
-float kd = .065;
+float kp = 1;
+float ki = 0.00015;
+float kd = .065; //0.065
 
 
 // I forgot what I made mode do lol
@@ -126,6 +126,9 @@ void setup() {
 
     initializeSD();
 
+    analogWrite(motorPin, 255);
+    analogWrite(torquePin, 100);  
+    analogWrite(speedPin, 0);
     attachInterrupt(buttonPin, pause, FALLING);
     attachInterrupt(pulsePin, encoderReader, RISING);
 }
@@ -171,7 +174,7 @@ void encoderReader() {
     }
 
     motorSpeedIndex ++;
-
+    
 
 }
 void loop() {
@@ -191,22 +194,22 @@ void loop() {
             }
             isLaunched = true;
             #endif
-
+            
             writeData(&currentData, powerG);
-            if (sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 30 && !isLaunched) {
+            if ((sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 10) && !isLaunched) {
                 isLaunched = true;
                 launchTimestamp = currentData.time;
 
             }
-
-            if (((currentData.time - launchTimestamp ) > (5000+waitTime))&& isLaunched) {
+            
+            if (((currentData.time - launchTimestamp ) > (18000+waitTime))&& isLaunched) {
                 outputMotor(0);
                 while(1) {
                     digitalWrite(calibrationPin, !digitalRead(calibrationPin));
                     delay(500);
                 }
             }
-
+            
             if (isLaunched) {
                 digitalWrite(calibrationPin, HIGH);
                 doTheThing(launchTimestamp);
