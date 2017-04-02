@@ -3,7 +3,7 @@
    @Date:   19-Feb-2017 23:02:34
    @Email:  ichi@u.northwestern.edu
 * @Last modified by:   Yichen Xu
-* @Last modified time: 2017-04-01T15:36:46-05:00
+* @Last modified time: 2017-04-01T20:26:56-05:00
  */
 
 
@@ -11,14 +11,14 @@
 #include "PID.h"
 
 int prevEI;
+float ogTurnLeft = 900; //CHANGED from 900
+float turnLeft = ogTurnLeft;
 
-float turnLeft = 750;
-float ogTurnLeft = 750;
 int prevE = 0.2*ogTurnLeft;
 int powerG;
 int isLaunchGyroSet = 0;
 float pE, iE, dE;
-float dAvg[5];
+float dAvg[5] = {prevE, prevE, prevE, prevE, prevE};
 int dAvgPoint = 0;
 int waitTimeConstant = waitTime;
 float initalVelocityThreshold = 180;
@@ -26,7 +26,7 @@ enum flightPlan_t { RESET, PID } plan = RESET;
 
 
 // target time for trajectory
-int targetTime = 4000;
+int targetTime = 5000; //CHANGED from 5000
 
 // Actually a PSD controller
 int calculatePID() {
@@ -81,11 +81,11 @@ int calculatePID() {
 
 
         // Anti integrator windup part
-        if (prevEI > 40 / ki) {
-                prevEI = 40 / ki;
+        if (prevEI > 60 / ki) { //CHANGED from 40
+                prevEI = 60 / ki;
         }
-        if (prevEI < -40 / ki) {
-                prevEI = -40 / ki;
+        if (prevEI < -60 / ki) {
+                prevEI = -60 / ki;
         }
 
         // scales iE
@@ -145,17 +145,17 @@ void doTheThing(uint32_t startTime) {
 #if DEBUG
                         Serial.println(launchGyro / SENSORS_DPS_TO_RADS);
 #endif
-                        if (abs(launchGyro/SENSORS_DPS_TO_RADS)<50) {
+                      //  if (abs(launchGyro/SENSORS_DPS_TO_RADS)<50) {
                                 // if it is, we do the PID only method of contolling it
-                                plan = PID;
-                        }
-                        else {
+                        //        plan = PID;
+                        //}
+                        //else {
                                 // else we change the plan to reset the velocity first
                                 plan = RESET;
                                 #if DEBUG
                                 Serial.println("RESET");
                                 #endif
-                        }
+                        //}
 
                 }
 
@@ -225,7 +225,7 @@ float calculateError(void) {
 int resetVelocity(void) {
 
         // If the signs of the gyro and launch gyro match, then the thing hasn't crossed 0 velocity yet in theory. That would cause a sign change, the signs dont match, then the formula below would return something less than 0
-        if ((((float) currentData.gyro.x) / launchGyro > 0) && (currentData.time-launchTimestamp-waitTime < 4000)) {
+        if ((((float) currentData.gyro.x) / launchGyro > 0) && (currentData.time-launchTimestamp-waitTime < 4000) && (abs(currentData.gyro.x/SENSORS_DPS_TO_RADS) > 20)) {
                 // Returns a velocity given by the initial velocity *kreset Constant.
                 // Important to note this is not a PID contorller, just a quick and dirty method of getting it to reset.
 
@@ -249,6 +249,10 @@ int resetVelocity(void) {
                         turnLeft = -1 * turnLeft; // Turnleft needs to go in the opposite direction
                         prevE = 0.2 * turnLeft;
                         ogTurnLeft = -1*ogTurnLeft;
+                      for (int i = 0; i < 5; i++) {
+                        dAvg[i]= prevE;
+                      }
+
 
                 }
                 else {
@@ -263,14 +267,14 @@ int resetVelocity(void) {
 void resetController(void) {
         prevEI=0;
 
-        turnLeft = 750;
+        ogTurnLeft = abs(ogTurnLeft);
+        turnLeft = ogTurnLeft;
         prevE = 0.2*turnLeft;
         powerG=0;
         isLaunchGyroSet = 0;
         pE=0;
         iE=0;
         dE=0;
-        dAvg[5];
         dAvgPoint = 0;
         initalVelocityThreshold = 180;
         plan = RESET;

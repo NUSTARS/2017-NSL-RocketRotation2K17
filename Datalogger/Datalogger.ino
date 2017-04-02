@@ -3,7 +3,7 @@
    @Date:   09-Feb-2017 19:02:46
    @Email:  ichi@u.northwestern.edu
 * @Last modified by:   Yichen Xu
-* @Last modified time: 2017-04-01T15:29:24-05:00
+* @Last modified time: 2017-04-01T19:46:23-05:00
  */
 
 #include "init.h"
@@ -46,9 +46,9 @@ int encoderMarks = 24;
 // PID Variables;
 DataSet prevData;
 DataSet currentData;
-float kp = 1;
-float ki = 0.00000015;//0.000015;//0.00015
-float kd = .065; // 0.065
+float kp = 1.0;
+float ki = 0.00000025;//0.000015;//0.00015
+float kd = 0.065; // 0.065
 float kreset = 1;
 
 // I forgot what I made mode do lol
@@ -112,6 +112,7 @@ void setup() {
     pinMode(torquePin, OUTPUT);
     pinMode(directionReadPin, INPUT);
     pinMode(directionPin, OUTPUT);
+    pinMode(speedPin, OUTPUT);
 
 
     // Open serial communications and wait for port to open:
@@ -163,10 +164,9 @@ void pause() {
         Serial.println("pls");
         #endif
 
-        // If now running, make a new file and turn Red LED on
+        // If not running, make a new file and turn Red LED on
         if (running) {
             digitalWrite(collectPin, HIGH);
-
             newFile();
         }
         else {
