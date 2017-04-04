@@ -3,7 +3,7 @@
    @Date:   09-Feb-2017 19:02:46
    @Email:  ichi@u.northwestern.edu
 * @Last modified by:   Yichen Xu
-* @Last modified time: 2017-04-01T19:46:23-05:00
+* @Last modified time: 2017-04-03T20:16:55-05:00
  */
 
 #include "init.h"
@@ -11,7 +11,7 @@
 #include "dataWriter.h"
 #include "PID.h"
 
-#define RUNTIME 15000
+#define RUNTIME 15500
 
 
 
@@ -59,7 +59,7 @@ volatile int encoderTime;
 volatile float motorSpeed[5];
 volatile uint8_t motorSpeedIndex;
 
-int waitTime = 3000;
+int waitTime = 3500;
 
 // =======Accel VARIABLES=======================
 
@@ -237,7 +237,7 @@ void loop() {
             writeData(&currentData, powerG);
 
             // Accelerometer based launch trigger, set to when the entire system gets above 20 m/s^2 in all directions total
-            if ((sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 5) && !isLaunched) {
+            if ((sqrt(pow(currentData.bAccel.x, 2) + pow(currentData.bAccel.y, 2) + pow(currentData.bAccel.z, 2)) > 20) && !isLaunched) {
                 // sets Launched togged to true, and grabs the launch timestamp as the current timestamp
                 isLaunched = true;
                 launchTimestamp = currentData.time;

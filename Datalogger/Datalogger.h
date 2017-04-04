@@ -3,7 +3,7 @@
 * @Date:   20-Feb-2017 01:02:75
 * @Email:  ichi@u.northwestern.edu
 * @Last modified by:   Yichen Xu
-* @Last modified time: 2017-04-01T14:36:10-05:00
+* @Last modified time: 2017-04-03T19:54:32-05:00
 */
 
 
@@ -12,7 +12,7 @@
 #define DATALOGGER_H
 
 // if debugging, set to 1, otherwise set to 0
-#define DEBUG 1
+#define DEBUG 0
 
 
 #include <SD.h>
