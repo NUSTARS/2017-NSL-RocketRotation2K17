@@ -123,6 +123,8 @@ void outputMotor(int power) {
 }
 
 // Yeah I need to be better about naming things
+// This basically calls all the other functions in PID.cpp after burnout, 
+// Calculates PID value and outputs to motor. 
 void doTheThing(uint32_t startTime) {
         // Really startTime isnt neccessary considering we already have launchTimestamp
 

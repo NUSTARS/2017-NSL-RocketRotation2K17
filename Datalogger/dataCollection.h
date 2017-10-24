@@ -10,8 +10,12 @@
 #define DATACOLLECTION_H
 #include "Datalogger.h"
 
+// get accell data and return a weird vector
 sensors_vec_t getAccelData();
+//Honestly we didnt really use calibration status. We kinda just let it fly on hope
+//That and we decided to just integrate the gyroscope which is always calibrated
 CalibrationData getCalibrationStatus();
+//Gets all the data. 
 DataSet getData();
 
 #endif

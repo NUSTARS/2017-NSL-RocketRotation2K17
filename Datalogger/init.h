@@ -3,6 +3,7 @@
 
 #include "Datalogger.h"
 
+//These do literally exactly what you think. 
 void initializeAccel();
 void initializeBNO();
 void initializeSD();
